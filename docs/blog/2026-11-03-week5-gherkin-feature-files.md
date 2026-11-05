@@ -1,6 +1,6 @@
 # dom1no — From Use Cases to Gherkin Feature Files
 
-*Week 6 project update — 3 November 2026*
+*Week 5 project update — 3 November 2026*
 
 This week, we took two of our existing use cases and turned them into Gherkin feature files. The idea was to describe what players should be able to do in a way that we could eventually turn into tests.
 

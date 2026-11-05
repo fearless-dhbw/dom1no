@@ -1,4 +1,4 @@
-# dom1no — Week 6 Gherkin feature narratives
+# dom1no — Week 5 Gherkin feature narratives
 
 These feature files describe intended behavior for the two detailed use cases. They are **BDD narratives**, not proof that the app is implemented. A Cucumber.js demonstration executes one scenario in memory; the remaining scenarios are not executable application tests.
 
@@ -18,7 +18,7 @@ These feature files describe intended behavior for the two detailed use cases. T
 1. The gameplay and friends screenshots below show Gherkin syntax highlighting in VS Code.
 2. The autocomplete screenshot shows a step suggestion from the JavaScript step definitions, not a simulated suggestion.
 3. Verify each decision branch against the corresponding activity diagram and resolve any discrepancies with the team.
-4. The narratives are linked from their detailed use cases, and the Week 6 blog draft documents AI assistance.
+4. The narratives are linked from their detailed use cases, and the Week 5 blog draft documents AI assistance.
 5. The runnable example is an in-memory demonstration only; do not describe it as a test of the application or claim all 11 scenarios are executable.
 
 ## Status
@@ -44,6 +44,6 @@ completion, and `.vscode/extensions.json` recommends the extension.
 
 ## VS Code evidence
 
-- **Gameplay Gherkin highlighting:** [week6-gherkin-gameplay-highlighting.png](../evidence/week6-gherkin-gameplay-highlighting.png)
-- **Friends Gherkin highlighting:** [week6-gherkin-friends-highlighting.png](../evidence/week6-gherkin-friends-highlighting.png)
-- **Step-definition autocomplete:** [week6-cucumber-step-autocomplete.png](../evidence/week6-cucumber-step-autocomplete.png)
+- **Gameplay Gherkin highlighting:** [week5-gherkin-gameplay-highlighting.png](../evidence/week5-gherkin-gameplay-highlighting.png)
+- **Friends Gherkin highlighting:** [week5-gherkin-friends-highlighting.png](../evidence/week5-gherkin-friends-highlighting.png)
+- **Step-definition autocomplete:** [week5-cucumber-step-autocomplete.png](../evidence/week5-cucumber-step-autocomplete.png)

@@ -1,0 +1,54 @@
+@startuml friends-activity
+title Send a Friend Request — activity
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+start
+:Authenticated sender opens friend search;
+repeat
+  :Enter or revise search query;
+  :Search username substrings, ignoring case;\nexclude sender;
+  if (Matches found?) then (yes)
+    :Display matching accounts;
+  else (no)
+    :Display no results;
+  endif
+  :Select a result, revise the query or leave;
+  if (Leave search?) then (yes)
+    :Close search without sending;
+    stop
+  endif
+repeat while (Recipient selected?) is (no) not (yes)
+if (Confirm sending?) then (no / cancel)
+  :Return without sending;
+  stop
+else (yes)
+  :Submit friend request;
+endif
+:Validate recipient and current relationship state;
+if (Self, already friends, or outgoing\npending request?) then (yes)
+  :Reject; explain reason;\ncreate no new request and show no success;
+  stop
+else (no)
+  if (Incoming pending request exists?) then (yes)
+    :Show incoming request with Accept / Decline;\nend send goal without sending another request;
+    note right: Accept / Decline belongs to a separate goal.
+    stop
+  endif
+  :Attempt to store pending request\navailable to the recipient;\nenforce one pending request per account pair;
+  :Service returns saved or failed outcome;
+  if (Response received?) then (yes)
+    if (Request saved?) then (yes)
+      :Display request sent (pending);\ndo not wait for recipient response;
+    else (no)
+      :Display save failure;\nshow no success confirmation;
+    endif
+  else (no)
+    :Display unconfirmed submission;\ndo not assume success or absence of a request;
+  endif
+  stop
+endif
+note right
+  Sending alone never creates friendship.
+  Self-request validation also protects direct submissions.
+end note
+@enduml

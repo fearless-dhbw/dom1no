@@ -1,104 +1,54 @@
 # DUC-02 — Send a Friend Request
 
-**Project:** dom1no  
-**Status:** Draft for team review  
-**Primary actor:** Authenticated player (sender)  
-**Supporting actor:** Target player (recipient)  
-**Scope:** dom1no social system  
-**Level:** User goal  
-**Related SRS:** [dom1no_SRS_v0.2.md](../../dom1no_SRS_v0.2.md), `FR-FRD-01`, `FR-FRD-03`, `FR-FRD-04`; later acceptance belongs to `FR-FRD-05`–`FR-FRD-07`.  
-**Design references:** [Figma prototype](https://www.figma.com/design/kJDrWOX1E7Uci3U2Gp9Cvs/Untitled?node-id=0-1&t=MYacNVOjFRvgLBVh-1)
+**Primary actor:** Signed-in player (sender); **supporting actor:** intended recipient.
 
-**Gherkin feature narrative:** [DUC-02-send-friend-request.feature](../features/DUC-02-send-friend-request.feature)
+**Related requirements:** [SRS](../SRS.md), `FR-FRD-01`, `FR-FRD-03` and `FR-FRD-04`. Accepting a request and displaying the resulting friendship are supporting goals under `FR-FRD-05`–`FR-FRD-07`; removing a friend is covered by `FR-FRD-08`–`FR-FRD-09`.
 
-## 1. Brief description
+**Narration:** [Gherkin scenarios](../features/DUC-02-send-friend-request.feature).
 
-An authenticated player finds another player and sends them a friend request. A friendship does **not** exist just because the request was sent; accepting it is a separate user goal.
+## Goal and boundary
 
-## 2. Preconditions
+The player finds another account and sends a pending friend request. Sending does not itself create a friendship. Acceptance, decline, removal, chat and game invitations are outside this detailed goal.
 
-- The sender is signed in.
-- The social/player search feature is available.
-- The target account can be identified using the search method to be agreed by the team (`DEC-09`).
+## Preconditions and trigger
 
-## 3. Trigger
+The sender is signed in. **Trigger:** They open Friends to find another player. Username search is available directly in this screen; an extra **Add Friend** action is not required before searching.
 
-The sender chooses to add another player as a friend.
+## Main success scenario
 
-## 4. Main success scenario
+1. The sender enters all or part of a username in the Friends search field, for example `pLaYeR2` to find `PLAYER2`.
+2. The system matches usernames by case-insensitive substring, excludes the sender's own account and displays matching accounts the sender is allowed to discover, including identifying information.
+3. The sender selects `PLAYER2` and chooses to send a friend request.
+4. The system checks that sender and recipient differ, are not already friends and do not already have a pending request in either direction. It also checks any applicable eligibility policy.
+5. The system records one pending request and makes it available to `PLAYER2`.
+6. After confirmed submission, the system tells the sender that the request was sent. Neither account is added to the other's friends list at this point.
 
-1. The player opens the friends area and searches for another player.
-2. The system presents matching players that the sender is permitted to find.
-3. The player selects the intended recipient and chooses **Send friend request**.
-4. The system checks that the sender can request friendship with this account.
-5. The system records a pending friend request and makes it available to the recipient.
-6. The system confirms to the sender that the request has been submitted.
+## Alternatives and failures
 
-## 5. Extensions and alternative flows
+| Situation | Behavior |
+| --- | --- |
+| Search has no matches | Show an empty-result message and allow a revised query. |
+| Sender cancels before submission | Leave without creating a request. |
+| Sender targets their own account | Reject the self-request. |
+| Accounts are already friends | Explain that they are already friends; create no request. |
+| The same sender already has a pending request to that recipient | Explain that a request is already pending; do not create a duplicate. |
+| A pending request from the intended recipient to the sender already exists | Show the existing incoming request with Accept/Decline choices instead of creating another request. Choosing either action belongs to the supporting request-management goal. |
+| Submission cannot be confirmed because of a storage/network failure | Show a failure or unconfirmed status, not a successful-send confirmation. Do not assert that no request exists if a write may already have happened. |
 
-| Step | Condition | System behavior / status |
-| --- | --- | --- |
-| 2 | No player matches | Show no results and allow another search. |
-| 3 | Player cancels before sending | End without creating a request. |
-| 4 | Recipient is the sender | Reject the request; self-request behavior should be explicitly agreed (`DEC-09`). |
-| 4 | Friendship or pending request already exists | Do not create a duplicate; response and reciprocal-request handling remain to be specified (`DEC-09`). |
-| 4 | Recipient is not eligible / is hidden or blocked | Reject according to the yet-to-be-agreed privacy and eligibility rules (`DEC-09`). |
-| 5 | Network or storage operation fails | Do not confirm successful delivery; show an error and offer a retry. |
+## Outcome and remaining questions
 
-## 6. Postconditions
+**Success:** One pending request exists for the intended recipient and is available to them. **Guarantees:** A request alone does not create a friendship; a disallowed self/duplicate request does not create another request; an unconfirmed submission is not shown as successfully sent.
 
-**Success:** A pending request exists for the intended recipient and is visible to that recipient according to the application's request presentation mechanism.  
-**Minimal guarantee:** No friendship is created merely by submitting the request; unsuccessful attempts are not presented as completed requests.
+Result ranking, empty-query behavior, discoverability/privacy and blocked-account policy remain unresolved. Cancellation here means leaving **before submission**, not withdrawing an already pending request. The decline lifecycle and retry/reconciliation after uncertain submission still need decisions. No notification channel or timing is promised beyond making the request available to its recipient.
 
-## 7. Boundary and open decisions
+## Activity diagram
 
-- **In scope:** find/select a target, submit request, make request available, show feedback.
-- **Out of scope:** accept/decline, remove friend, chat, and managing a friend's game invitation. These are separate user goals.
-- `DEC-09` remains open for search identifiers, duplicate requests, reciprocal requests, blocked accounts, privacy and cancellation.
-- UI screenshots are proposals, not evidence of implementation.
+![Send a Friend Request activity diagram](../diagrams/friends-activity.svg)
 
-## 8. Activity diagram (goal-specific draft)
+[Editable PlantUML](../diagrams/friends-activity.puml) · [Supporting sequence diagram](../diagrams/friends-sequence.svg)
 
-```mermaid
-flowchart TD
-  A([Start]) --> B[Open friends and search for player]
-  B --> C{Matching player found?}
-  C -- No --> D[Show no results / revise search]
-  D --> B
-  C -- Yes --> E[Select recipient]
-  E --> F{Send request?}
-  F -- No --> Z([End without request])
-  F -- Yes --> G{Request allowed?}
-  G -- No --> H[Show reason / no duplicate created]
-  H --> Z
-  G -- Yes --> I[Create pending request]
-  I --> J{Saved successfully?}
-  J -- No --> K[Show error / retry option]
-  K --> Z
-  J -- Yes --> L[Make request available to recipient]
-  L --> M[Confirm request sent]
-  M --> N([End])
-```
+## Interface wireframe
 
-## 9. Supporting diagrams and mockups
+![Friends wireframe](../mockups/friends.svg)
 
-Existing broader team diagrams (also cover accepting/removing friends):
-
-![Friends activity diagram](../diagrams/friends-activity.png)
-
-![Friends sequence diagram](../diagrams/friends-sequence.png)
-
-![Friends screen](../mockups/07-friends.png)
-
-![Remove friend confirmation — separate use case, shown for context only](../mockups/08-friends-remove-confirm.png)
-
-Editable mockups: [Figma](https://www.figma.com/design/kJDrWOX1E7Uci3U2Gp9Cvs/Untitled?node-id=0-1&t=MYacNVOjFRvgLBVh-1).
-
-## 10. Acceptance checks to define
-
-- Sending an eligible request records one pending request for the correct recipient.
-- The recipient can view the received request.
-- Cancelling before submission does not create a request.
-- A failed or disallowed request is not reported as successfully sent.
-
-> **Review note:** `DUC-02` refers to this detailed use case; `UC-02` in the SRS appendix names the **Authentication Use Case diagram**.
+The screen shows direct search, pending feedback, disabled duplicate actions and the recipient's separate inbox. The activity and scenarios specify failure feedback. Edit the SVG itself; this is a design, not an application screenshot.

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2370" viewBox="0 0 1200 2370" role="img" aria-labelledby="title description">
+  <title id="title">Domino gameplay: setup, turns, and pairs</title>
+  <desc id="description">Five separate wireframe panels. Select exactly two or three individual players with draw rules, or four players in pairs with block rules, before joining a queue. Private hosts start only full rooms. An isolated move fixture changes open ends three and one to five and one by playing three-five on the left. An invalid six-six leaves board and hand unchanged. Draw and block controls are separate variants. Opposite seats form teams; blocked pairs compare team pip sums, not tile counts.</desc>
+  <defs>
+    <style>
+      text { font-family: sans-serif; fill: #18212b; font-size: 22px; }
+      .title { font-size: 34px; font-weight: bold; }
+      .heading { font-size: 27px; font-weight: bold; }
+      .label { font-weight: bold; }
+      .note { font-size: 20px; fill: #374151; }
+      .panel { fill: #fff; stroke: #64748b; stroke-width: 2; }
+      .box { fill: #f1f5f9; stroke: #64748b; stroke-width: 2; }
+      .button { fill: #e0ecff; stroke: #1d4ed8; stroke-width: 2; }
+      .disabled { fill: #e5e7eb; stroke: #6b7280; stroke-width: 2; stroke-dasharray: 6 4; }
+      .tile { fill: #fff; stroke: #18212b; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect width="1200" height="2370" fill="#e8edf2"/>
+  <text x="40" y="55" class="title">Gameplay wireframe</text>
+  <text x="40" y="92" class="note">Separate examples, not one match transcript. Numeric tiles are editable text.</text>
+
+  <g aria-label="Step 1: select configuration before waiting">
+    <rect x="30" y="120" width="1140" height="480" rx="12" class="panel"/>
+    <text x="55" y="164" class="heading">1 · Choose configuration before joining</text>
+    <text x="55" y="204">Available configurations — choose exactly one:</text>
+    <rect x="55" y="225" width="335" height="60" rx="6" class="box"/>
+    <text x="75" y="263">○ 2 individual · draw</text>
+    <rect x="405" y="225" width="335" height="60" rx="6" class="button"/>
+    <text x="425" y="263">● 3 individual · draw</text>
+    <rect x="755" y="225" width="385" height="60" rx="6" class="box"/>
+    <text x="775" y="263">○ 4 players · pairs · block</text>
+    <rect x="55" y="305" width="525" height="265" rx="6" class="box"/>
+    <text x="75" y="342" class="label">Online matchmaking</text>
+    <text x="75" y="381">Select above → Join queue</text>
+    <text x="75" y="421" class="label">3 individual · 2 of 3 waiting</text>
+    <text x="75" y="458">Wait for player 3. No automatic switch</text>
+    <text x="75" y="489">to 2 players or another rule set.</text>
+    <text x="75" y="538">Waiting for the selected configuration.</text>
+    <rect x="600" y="305" width="540" height="265" rx="6" class="box"/>
+    <text x="620" y="342" class="label">Private room · host controls</text>
+    <text x="620" y="381">Host chooses one configuration above.</text>
+    <text x="620" y="421">Example: 4 pairs · 3 of 4 joined</text>
+    <rect x="620" y="443" width="210" height="48" rx="6" class="disabled"/>
+    <text x="640" y="475">Start · disabled</text>
+    <text x="620" y="529">Host can start only when full (4 of 4).</text>
+  </g>
+
+  <g aria-label="Step 2: valid move example">
+    <rect x="30" y="620" width="1140" height="500" rx="12" class="panel"/>
+    <text x="55" y="665" class="heading">2 · Your turn: select a tile, then an open end</text>
+    <text x="55" y="704" class="note">Isolated turn fixture: only the relevant hand tiles and board ends are shown.</text>
+    <text x="55" y="751" class="label">Before · open ends: 3, 1</text>
+    <rect x="75" y="774" width="130" height="58" rx="6" class="tile"/>
+    <text x="108" y="812">3 | 2</text>
+    <text x="240" y="812">… existing chain …</text>
+    <rect x="500" y="774" width="130" height="58" rx="6" class="tile"/>
+    <text x="533" y="812">4 | 1</text>
+    <text x="715" y="758">Your hand: 4 tiles</text>
+    <rect x="715" y="779" width="145" height="60" rx="6" class="button"/>
+    <text x="741" y="818">3 | 5 ✓</text>
+    <text x="885" y="818">6 | 6, …</text>
+    <rect x="55" y="859" width="285" height="52" rx="6" class="button"/>
+    <text x="75" y="893">Play selected tile · LEFT</text>
+    <text x="375" y="893">3 matches 3; orient the tile as 5 | 3.</text>
+    <text x="55" y="955" class="label">After · open ends: 5, 1</text>
+    <rect x="75" y="977" width="130" height="58" rx="6" class="tile"/>
+    <text x="108" y="1015">5 | 3</text>
+    <rect x="205" y="977" width="130" height="58" rx="6" class="tile"/>
+    <text x="238" y="1015">3 | 2</text>
+    <text x="355" y="1015">…</text>
+    <rect x="410" y="977" width="130" height="58" rx="6" class="tile"/>
+    <text x="443" y="1015">4 | 1</text>
+    <text x="715" y="991">Your hand: 3 tiles (was 4)</text>
+    <text x="715" y="1030">3 | 5 removed from hand.</text>
+    <text x="55" y="1082">Move accepted → next player's turn.</text>
+  </g>
+
+  <g aria-label="Step 3: invalid move and turn guards">
+    <rect x="30" y="1140" width="1140" height="300" rx="12" class="panel"/>
+    <text x="55" y="1185" class="heading">3 · Rejection does not change the game state</text>
+    <text x="55" y="1227">Alternative attempt from BEFORE in step 2: your turn, ends 3 and 1, hand 4.</text>
+    <text x="55" y="1270" class="label">Select 6 | 6 → try left or right → rejected</text>
+    <text x="55" y="1308">“6 matches neither open end.” Board stays at 3, 1. Hand stays at 4 tiles.</text>
+    <text x="55" y="1346">6 | 6 stays in hand. It is still your turn.</text>
+    <rect x="55" y="1366" width="330" height="48" rx="6" class="disabled"/>
+    <text x="75" y="1398">Not your turn: Play disabled</text>
+    <text x="415" y="1398">Draw / Pass also disabled outside your turn.</text>
+  </g>
+
+  <g aria-label="Step 4: separate rule variants for draw and block">
+    <rect x="30" y="1460" width="1140" height="330" rx="12" class="panel"/>
+    <text x="55" y="1505" class="heading">4 · No legal tile? Controls depend on the selected rules</text>
+    <text x="55" y="1544" class="note">Separate UI variants below — these are not the same board state.</text>
+    <rect x="55" y="1565" width="525" height="195" rx="6" class="box"/>
+    <text x="75" y="1605" class="label">2 or 3 individual · draw</text>
+    <text x="75" y="1642">Stock: available · no playable tile</text>
+    <rect x="75" y="1661" width="170" height="48" rx="6" class="button"/>
+    <text x="95" y="1693">Draw tile</text>
+    <text x="75" y="1741" class="note">Draw until playable; pass if stock exhausted.</text>
+    <rect x="600" y="1565" width="540" height="195" rx="6" class="box"/>
+    <text x="620" y="1605" class="label">4 players · pairs · block</text>
+    <text x="620" y="1642">No stock · no playable tile</text>
+    <rect x="620" y="1661" width="170" height="48" rx="6" class="button"/>
+    <text x="640" y="1693">Pass turn</text>
+    <text x="620" y="1741" class="note">No Draw control in this variant.</text>
+  </g>
+
+  <g aria-label="Step 5: pairs seating and blocked result">
+    <rect x="30" y="1810" width="1140" height="520" rx="12" class="panel"/>
+    <text x="55" y="1855" class="heading">5 · Four-player pairs: opposite seats share a result</text>
+    <text x="55" y="1894">Seats 1 &amp; 3 = Team A. Seats 2 &amp; 4 = Team B.</text>
+    <rect x="195" y="1920" width="230" height="55" rx="6" class="box"/>
+    <text x="215" y="1956">Seat 3 · Team A</text>
+    <rect x="55" y="2000" width="230" height="55" rx="6" class="box"/>
+    <text x="75" y="2036">Seat 4 · Team B</text>
+    <rect x="335" y="2000" width="230" height="55" rx="6" class="box"/>
+    <text x="355" y="2036">Seat 2 · Team B</text>
+    <rect x="195" y="2080" width="230" height="55" rx="6" class="box"/>
+    <text x="215" y="2116">Seat 1 · Team A</text>
+    <text x="620" y="1947" class="label">Blocked-game example</text>
+    <text x="620" y="1988">All four players have no legal move.</text>
+    <text x="620" y="2029">Team A pips: seat 1 (7) + seat 3 (5)</text>
+    <text x="620" y="2065">= 12 remaining pips</text>
+    <text x="620" y="2106">Team B pips: seat 2 (9) + seat 4 (9)</text>
+    <text x="620" y="2142">= 18 remaining pips</text>
+    <text x="55" y="2205" class="heading">Team A wins: 12 &lt; 18 remaining pips</text>
+    <text x="55" y="2246">Compare team pip totals, not tile counts or individual-player rankings.</text>
+    <text x="55" y="2287" class="note">Illustrative result fixture only; it does not continue the earlier individual-turn example.</text>
+  </g>
+</svg>

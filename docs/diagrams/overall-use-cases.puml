@@ -1,0 +1,31 @@
+@startuml overall-use-cases
+!pragma layout smetana
+title DOM1NO — semester user goals
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+actor Player
+rectangle "DOM1NO" {
+  usecase "Play a match" as Play
+  usecase "Join an online match" as Join
+  usecase "Invite players to a\nprivate match" as Invite
+  usecase "Send a friend request" as Request
+  usecase "Chat with a friend" as Chat
+}
+Player -- Play
+Player -- Join
+Player -- Invite
+Player -- Request
+Player -- Chat
+note bottom of Play
+  Detailed use case: Play a Domino Match.
+  Joining and inviting are separate goals,
+  not mandatory included steps of playing.
+end note
+note bottom of Player
+  Authentication supports these goals;
+  login is not one of the five user goals.
+  Profile settings and computer opponents
+  are deferred.
+end note
+@enduml

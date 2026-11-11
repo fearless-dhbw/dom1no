@@ -1,0 +1,52 @@
+@startuml gameplay-sequence
+title Play a Domino Match — invalid retry and confirmed placement
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+autonumber
+actor "Active player" as Player
+boundary "Player client" as Client
+control "Authoritative game service" as Game
+collections "All participant clients" as All
+note over Player, All
+  Precondition: full, configured match has been dealt and opened.
+  2/3: individual draw; 4: fixed opposing-seat teams, block.
+  This example shows one placement turn, not a fixed round of four turns.
+end note
+Player -> Client: Choose an illegal tile/end
+Client -> Game: Request placement(tile, end)
+Game -> Game: Validate turn, ownership and matching end
+Game --> Client: Reject illegal placement (confirmed)
+note right of Game
+  State and active participant unchanged.
+  An out-of-turn request is rejected identically.
+end note
+Client --> Player: Show reason; allow retry
+Player -> Client: Choose a legal tile/end
+Client -> Game: Request placement(tile, end)
+Game -> Game: Revalidate against current state
+alt Still legal and player's turn
+  Game -> Game: Apply placement; remove tile; reset passes
+  alt Hand now empty
+    Game -> Game: Finish immediately: player (2/3) or team (4) wins
+    Game --> Client: Confirm placement and final result
+    Game -> All: Broadcast final state and result
+    Client --> Player: Display confirmed result
+    note right of Game: No next turn after a terminal placement.
+  else Tiles remain
+    Game -> Game: Advance active participant in seat order (wrap)
+    Game --> Client: Confirm placement and next participant
+    Game -> All: Broadcast updated state and next participant
+    Client --> Player: Display confirmed state
+  end
+else No longer valid / out of turn
+  Game --> Client: Reject; no state or turn change
+  Client --> Player: Show rejection and current confirmed state
+end
+note over Client, All
+  Broadcast includes the acting client; it is not a separate extra participant.
+  Share board, turn, counts and result; each hand is private to its owner.
+  If confirmation is not received, the client must not claim success.
+  Missing delivery does not imply server rejection; recovery is unresolved.
+  Draw/pass and blocked-game resolution are in the activity diagram.
+end note
+@enduml

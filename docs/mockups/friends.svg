@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1540" viewBox="0 0 1200 1540" role="img" aria-labelledby="title description">
+  <title id="title">Friends: search, send a request, and recipient actions</title>
+  <desc id="description">Jamie searches for al, matching usernames by case-insensitive substring and excluding Jamie's own account. Alex appears with a Send request button. After sending, the button is disabled and reads Request pending; Jamie is not yet friends with Alex. Only one pending request is allowed per account pair. Separate state examples show an existing friend disabled, an outgoing request disabled, and an incoming request linking to the inbox rather than creating a reciprocal request. Alex's inbox shows Jamie's pending request, with Accept and Decline as supporting actions outside the send goal. Self-requests are blocked. Privacy policy is not specified here.</desc>
+  <defs>
+    <style>
+      text { font-family: sans-serif; fill: #18212b; font-size: 22px; }
+      .title { font-size: 34px; font-weight: bold; }
+      .heading { font-size: 27px; font-weight: bold; }
+      .label { font-weight: bold; }
+      .note { font-size: 20px; fill: #374151; }
+      .panel { fill: #fff; stroke: #64748b; stroke-width: 2; }
+      .box { fill: #f1f5f9; stroke: #64748b; stroke-width: 2; }
+      .button { fill: #e0ecff; stroke: #1d4ed8; stroke-width: 2; }
+      .disabled { fill: #e5e7eb; stroke: #6b7280; stroke-width: 2; stroke-dasharray: 6 4; }
+    </style>
+  </defs>
+  <rect width="1200" height="1540" fill="#e8edf2"/>
+  <text x="40" y="55" class="title">Friends wireframe</text>
+  <text x="40" y="94" class="note">Main goal: send a friendship request. Sending is not acceptance.</text>
+
+  <g aria-label="Step 1: username search and result">
+    <rect x="30" y="120" width="1140" height="330" rx="12" class="panel"/>
+    <text x="55" y="165" class="heading">1 · Jamie's view — search directly from Friends</text>
+    <text x="55" y="211" class="label">Search by username</text>
+    <rect x="55" y="230" width="760" height="58" rx="6" class="box"/>
+    <text x="75" y="267">al</text>
+    <rect x="840" y="230" width="270" height="58" rx="6" class="button"/>
+    <text x="915" y="267">Search</text>
+    <text x="55" y="329">Username contains “al” (ignoring case)</text>
+    <rect x="55" y="348" width="1055" height="72" rx="6" class="box"/>
+    <text x="75" y="393">Alex · username: alex</text>
+    <rect x="840" y="359" width="250" height="50" rx="6" class="button"/>
+    <text x="883" y="392">Send request</text>
+  </g>
+
+  <g aria-label="Step 2: sender feedback after sending">
+    <rect x="30" y="470" width="1140" height="250" rx="12" class="panel"/>
+    <text x="55" y="515" class="heading">2 · After Jamie selects Send request</text>
+    <text x="55" y="559" class="label">Request sent to Alex. Awaiting their response.</text>
+    <rect x="55" y="581" width="1055" height="72" rx="6" class="box"/>
+    <text x="75" y="626">Alex · username: alex</text>
+    <rect x="810" y="592" width="280" height="50" rx="6" class="disabled"/>
+    <text x="838" y="625">Request pending</text>
+    <text x="55" y="692">Disabled: cannot send a duplicate. Alex is not yet in Jamie's friends list.</text>
+  </g>
+
+  <g aria-label="Alternative result states, not additional search results">
+    <rect x="30" y="740" width="1140" height="330" rx="12" class="panel"/>
+    <text x="55" y="785" class="heading">3 · Other result states — separate examples</text>
+    <text x="55" y="824" class="note">Separate states, not a result list. One pending request per account pair.</text>
+    <text x="75" y="882">An existing friend</text>
+    <rect x="765" y="847" width="325" height="50" rx="6" class="disabled"/>
+    <text x="790" y="880">Already friends · disabled</text>
+    <text x="75" y="951">An outgoing request already pending</text>
+    <rect x="765" y="916" width="325" height="50" rx="6" class="disabled"/>
+    <text x="790" y="949">Pending · disabled</text>
+    <text x="75" y="1020">An incoming request already pending</text>
+    <rect x="765" y="985" width="325" height="50" rx="6" class="button"/>
+    <text x="790" y="1018">View incoming request</text>
+  </g>
+
+  <g aria-label="Recipient inbox: supporting accept and decline actions">
+    <rect x="30" y="1090" width="1140" height="270" rx="12" class="panel"/>
+    <text x="55" y="1135" class="heading">4 · Alex's view — incoming requests</text>
+    <text x="55" y="1178">Pending request from Jamie · username: jamie</text>
+    <rect x="55" y="1200" width="210" height="52" rx="6" class="button"/>
+    <text x="121" y="1235">Accept</text>
+    <rect x="290" y="1200" width="210" height="52" rx="6" class="box"/>
+    <text x="352" y="1235">Decline</text>
+    <text x="55" y="1293">Outside the send goal: Accept establishes friendship; Decline does not.</text>
+    <text x="55" y="1330" class="note">Neither action has happened in this example. The request remains pending.</text>
+  </g>
+  <text x="40" y="1411" class="label">Scope notes</text>
+  <text x="40" y="1450" class="note">Search excludes the sender; self-requests are blocked. Incoming requests open the inbox.</text>
+  <text x="40" y="1486" class="note">No reciprocal request is created. Privacy policy is not specified by this drawing.</text>
+</svg>

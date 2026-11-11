@@ -1,107 +1,60 @@
 # DUC-01 — Play a Domino Match
 
-**Project:** dom1no  
-**Status:** Draft for team review  
-**Primary actor:** Player  
-**Scope:** dom1no game system  
-**Level:** User goal  
-**Related SRS:** [dom1no_SRS_v0.2.md](../../dom1no_SRS_v0.2.md), especially `FR-GAME-03`–`FR-GAME-16`; for online matches also `FR-ONL-03`–`FR-ONL-10`.  
-**Design references:** [Figma prototype](https://www.figma.com/design/kJDrWOX1E7Uci3U2Gp9Cvs/Untitled?node-id=0-1&t=MYacNVOjFRvgLBVh-1)
+**Primary actor:** Signed-in player; **other actors:** the other match participants.
 
-**Gherkin feature narrative:** [DUC-01-play-domino-match.feature](../features/DUC-01-play-domino-match.feature)
+**Related requirements:** [SRS](../SRS.md), `FR-GAME-03`–`FR-GAME-11`, `FR-GAME-14`–`FR-GAME-16` and `FR-ONL-03`–`FR-ONL-10`.
 
-## 1. Brief description
+**Narration:** [Gherkin scenarios](../features/DUC-01-play-domino-match.feature). These describe intended behavior, not implemented application tests.
 
-A player completes a domino match by taking turns, placing valid tiles, and seeing the match result. The same core gameplay applies whether the opponent is a computer or another player. Starting the match and choosing an opponent are treated as supporting interactions; this use case focuses on **playing a match**.
+## Goal and boundary
 
-## 2. Preconditions
+The player completes one online domino game and sees its result. Matchmaking and private-room setup happen before this goal starts. There is no computer opponent or multi-round score in the current scope.
 
-- A match has been created, with the players and initial game state established according to the approved Rules Profile `RP-01`.
-- The player has access to the match; for an online match, they are an authorized participant.
+## Preconditions and trigger
 
-## 3. Trigger
+- The player is an authorized participant in a full, configured match.
+- The chosen configuration is two individual players, three individual players, or four players in fixed opposite-seat partnerships. Public matchmaking waits for exactly the chosen configuration with no automatic fallback; a private host starts only when the chosen configuration is full.
 
-The match begins and the game board is presented.
+**Trigger:** The configured match starts. Joining the match and filling its seats are separate goals; shuffling, dealing and opening belong to playing it.
 
-## 4. Main success scenario
+## Main success scenario
 
-1. The system displays the board, the player's tiles, and the active turn.
-2. On the player's turn, the player selects a tile and submits a placement.
-3. The system validates the proposed placement against the current match state and `RP-01`.
-4. The system accepts a legal move and updates the board and the player's hand.
-5. The system makes the updated state available to the participants and advances the turn according to `RP-01`.
-6. The opponent completes their turn according to the match mode and game rules.
-7. Steps 1–6 repeat until the configured end condition is reached.
-8. The system determines and displays the match result according to `RP-01`.
+1. The system shuffles and deals seven tiles each, identifies the opener and applies the opening placement under the [game rules](../game-rules.md). The next seat becomes active.
+2. The system shows the board, the player's hand and whose turn it is.
+3. On their turn, the player chooses a tile, an open end and its orientation. For example, with an open end of 6, `6|3` can be placed with its 6 touching that end.
+4. The system checks participant identity, turn and placement against the authoritative match state.
+5. The system accepts the legal placement, adds the tile to the board and removes it from the player's hand. A placement resets the consecutive-pass count.
+6. If the hand is empty, the system immediately ends the game and shows that player's victory, or their partnership's victory in four-player play.
+7. Otherwise, the system advances to the next seat and makes the accepted state available to all participants.
+8. Participants repeat their turns until a hand is empty or consecutive passes end a blocked game. The system displays the result, including a tie where applicable.
 
-## 5. Extensions and alternative flows
+## Alternatives and failures
 
-| Step | Condition | System behavior |
-| --- | --- | --- |
-| 2–3 | Player submits an invalid placement | Reject the action, explain it was not accepted, leave the authoritative match state unchanged, and allow another choice (`FR-GAME-09`, `FR-ONL-08`). |
-| 2 | It is not the player's turn | Do not accept a placement (`FR-ONL-05` for online play). |
-| 2 | No legal placement is available | Apply the draw/pass/blocked-game rule specified by `RP-01` (`FR-GAME-14`). |
-| 3–5 | Online request cannot be delivered | Do not show it as an accepted move; recovery behavior remains to be decided (`FR-ONL-10`, `DEC-06`). |
-| 6 | Computer is the active opponent | Computer chooses and applies a rule-compliant move (`FR-GAME-12`, `FR-GAME-13`). |
-| 7–8 | Match ends in a tie or blocked state | Determine outcome using `RP-01`, once approved. |
+| Situation | Behavior |
+| --- | --- |
+| A placement does not match the selected open end, or has the wrong orientation | Explain the rejection; leave board, hand and active turn unchanged; allow another choice. |
+| A participant submits a placement out of turn | Reject it without changing the authoritative match state. |
+| No tile in hand can be placed, and the boneyard contains tiles | In two-/three-player play, draw until a legal tile is obtained or the boneyard is empty. A legal drawn tile can be placed on this turn; drawing alone does not advance the turn. |
+| No tile can be placed and there is no stock | Pass and advance to the next seat. This also applies to four-player play, where there is never a boneyard. |
+| Consecutive passes reach the number of players | End the blocked game. In individual play, the lowest remaining hand pip total wins; equal lowest totals tie. In partnerships, compare the two teams' combined remaining pip totals; the lower total wins, or equal totals tie. |
+| Another participant empties their hand | End immediately and show their individual or partnership victory; do not offer another turn. |
+| A move is known not to have been sent | Do not show it as accepted. |
+| A response is lost after a move was sent | Acceptance is unknown: do not claim rejection, success or unchanged authoritative state without confirmation. |
 
-## 6. Postconditions
+## Outcome and remaining questions
 
-**Success:** The match is finished and its result is displayed.  
-**Minimal guarantee:** Any rejected move has not changed the authoritative game state.
+**Success:** The finished game's winner or tie is displayed. **Rejection guarantee:** A rejected placement changes neither board, hand nor turn. A communication failure is not necessarily a rejected placement.
 
-## 7. Rules, open decisions and constraints
+The [game rules](../game-rules.md) are the authority for dealing, placement and outcomes. Disconnect recovery, reconnect timing and abandoned-match outcomes still need decisions; this use case does not invent them.
 
-- `RP-01` still needs the chosen domino variant, deal, valid placements, draw/pass rules, round termination, tie handling, and scoring; this document does **not** assert those rules are already finalized.
-- Match disconnect/rejoin and abandonment handling (`DEC-06`) remain open.
-- UI screenshots are **proposed designs**, not confirmation of implemented behavior.
+## Activity diagram
 
-## 8. Activity diagram (goal-specific draft)
+![Play a Domino Match activity diagram](../diagrams/gameplay-activity.svg)
 
-```mermaid
-flowchart TD
-  A([Match begins]) --> B[Display board and active turn]
-  B --> C{Player's turn?}
-  C -- No --> D[Wait for opponent / receive state]
-  D --> B
-  C -- Yes --> E{Legal placement available?}
-  E -- No --> F[Apply RP-01 draw / pass rule]
-  F --> G{Match finished?}
-  E -- Yes --> H[Select tile and submit placement]
-  H --> I{Move valid under RP-01?}
-  I -- No --> J[Show rejection; do not change game state]
-  J --> H
-  I -- Yes --> K[Update board, hand, and next turn]
-  K --> G
-  G -- No --> B
-  G -- Yes --> L[Display match result]
-  L --> M([End])
-```
+[Editable PlantUML](../diagrams/gameplay-activity.puml) · [Supporting sequence diagram](../diagrams/gameplay-sequence.svg)
 
-## 9. Supporting diagrams and mockups
+## Interface wireframe
 
-Existing team activity and sequence diagrams (broader gameplay overview):
+![Gameplay wireframe](../mockups/gameplay.svg)
 
-![Gameplay activity diagram](../diagrams/gameplay-activity.png)
-
-![Gameplay sequence diagram](../diagrams/gameplay-sequence.png)
-
-Proposed interface screens, in order:
-
-![Start](../mockups/01-gameplay-start.png)
-![Your turn](../mockups/02-gameplay-your-turn.png)
-![Tile selected](../mockups/03-gameplay-tile-selected.png)
-![Invalid move](../mockups/04-gameplay-invalid-move.png)
-![Waiting](../mockups/05-gameplay-waiting.png)
-![Results](../mockups/06-gameplay-results.png)
-
-For the editable UI design, see [Figma](https://www.figma.com/design/kJDrWOX1E7Uci3U2Gp9Cvs/Untitled?node-id=0-1&t=MYacNVOjFRvgLBVh-1).
-
-## 10. Acceptance checks to define
-
-- A legal placement updates the authoritative board and the active player's hand.
-- An illegal placement leaves the authoritative game state unchanged.
-- A player cannot play out of turn in an online game.
-- The result appears when the approved `RP-01` end condition is met.
-
-> **Review note:** This detailed use-case ID is `DUC-01` to avoid confusion with the SRS appendix's `UC-01`, which identifies the broader **Gameplay Use Cases diagram**.
+The panels illustrate turn display, tile selection, rejected placement, waiting and the game result. Edit the SVG itself; this is a design, not an application screenshot.

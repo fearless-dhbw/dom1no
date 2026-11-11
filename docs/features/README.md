@@ -1,49 +1,29 @@
-# dom1no — Week 6 Gherkin feature narratives
+# Gherkin feature narratives — Week 5
 
-These feature files describe intended behavior for the two detailed use cases. They are **BDD narratives**, not proof that the app is implemented. A Cucumber.js demonstration executes one scenario in memory; the remaining scenarios are not executable application tests.
+These narratives accompany the two detailed user goals. They specify intended behavior; they are not evidence that the application is implemented.
 
-| Feature | Detailed use case | Scenarios |
+| Feature | Detailed use case | Paths described |
 | --- | --- | --- |
-| [Play a Domino Match](DUC-01-play-domino-match.feature) | [DUC-01](../use-cases/DUC-01-play-domino-match.md) | Start, legal move, illegal move, win, blocked game |
-| [Send Friend Request](DUC-02-send-friend-request.feature) | [DUC-02](../use-cases/DUC-02-send-friend-request.md) | Search success, no match, send, existing friend, accept, decline |
+| [Play a Domino Match](DUC-01-play-domino-match.feature) | [DUC-01](../use-cases/DUC-01-play-domino-match.md) | Deal/open, legal/rejected placement, turns, draw/pass, blocked results and ties, empty-hand victory, communication uncertainty |
+| [Send Friend Request](DUC-02-send-friend-request.feature) | [DUC-02](../use-cases/DUC-02-send-friend-request.md) | Username/substring search, sender exclusion, send, no results, existing friend, outgoing duplicate, incoming request, self-request, cancellation, unconfirmed save |
 
-## Scope notes for team review
+Playing starts with a full, configured match: dealing and opening are part of this goal, but joining a queue or room is not. Configurations and outcomes follow the [game rules](../game-rules.md). Accepting/declining a request is supporting friendship behavior, not part of sending one. The use-case pages embed the corresponding activity diagrams and explain remaining recovery and privacy questions.
 
-- **DUC-01:** The `Start a new game` scenario is supporting setup from the team's broader gameplay activity diagram; the detailed use case starts after a match has been created. The four-player setup is taken from that diagram and does not settle the rules profile (`RP-01`). The blocked-game scenario intentionally leaves scoring and tie-breaking undefined until the team approves `RP-01`.
-- **DUC-02:** The detailed use case is specifically *sending* a request. Accept/decline scenarios are included because the broader team activity diagram includes them, **not** because acceptance/decline have been reclassified as steps in DUC-02. The existing-friend case and exact feedback wording require confirmation under `DEC-09`.
-- Scenario steps describe intended behavior. The in-memory demonstration has six step definitions for one friend-search scenario only; it does not exercise a dom1no application.
-
-## Evidence and review checklist
-
-1. The gameplay and friends screenshots below show Gherkin syntax highlighting in VS Code.
-2. The autocomplete screenshot shows a step suggestion from the JavaScript step definitions, not a simulated suggestion.
-3. Verify each decision branch against the corresponding activity diagram and resolve any discrepancies with the team.
-4. The narratives are linked from their detailed use cases, and the Week 6 blog draft documents AI assistance.
-5. The runnable example is an in-memory demonstration only; do not describe it as a test of the application or claim all 11 scenarios are executable.
-
-## Status
-
-Draft for team review. The demonstration below runs only the named scenario.
-
-## Executable demonstration
-
-The repository includes a minimal JavaScript Cucumber.js setup for the existing
-`Find a player by username` scenario:
+## Runnable demonstration
 
 ```sh
-npm install
+npm ci
 npm run test:gherkin-demo
 ```
 
-This is an **in-memory demonstration**, not a test of a dom1no application:
-there is no implemented application or production integration behind these
-steps. Only this one scenario has step definitions; the other feature scenarios
-remain descriptive narratives. The root `.vscode` settings point the official
-Cucumber extension at these feature and step-definition files for editor
-completion, and `.vscode/extensions.json` recommends the extension.
+Use Node.js 22, 24 or 26+. The command selects only `Find a player by username`: five Gherkin steps against an in-memory fixture, not an application or service. Verification on 9 November passed; Cucumber reports **six steps**, including the setup hook. The mixed-case substring and sender-exclusion scenarios were also run successfully with the same definitions. The remaining scenarios are descriptive; executing all of them against the application is later work.
 
-## VS Code evidence
+The search runs directly in Friends, matching the wireframe. VS Code settings connect the features to these demonstration definitions for autocomplete. The [correction example](../blog/2026-11-09-repository-corrections.md#what-the-checks-tell-us) explains what the checks demonstrate.
 
-- **Gameplay Gherkin highlighting:** [week6-gherkin-gameplay-highlighting.png](../evidence/week6-gherkin-gameplay-highlighting.png)
-- **Friends Gherkin highlighting:** [week6-gherkin-friends-highlighting.png](../evidence/week6-gherkin-friends-highlighting.png)
-- **Step-definition autocomplete:** [week6-cucumber-step-autocomplete.png](../evidence/week6-cucumber-step-autocomplete.png)
+## IDE evidence
+
+- [Gameplay Gherkin highlighting](../evidence/week6-gherkin-gameplay-highlighting.png)
+- [Friends Gherkin highlighting](../evidence/week6-gherkin-friends-highlighting.png)
+- [Step-definition autocomplete](../evidence/week6-cucumber-step-autocomplete.png)
+
+The captures demonstrate highlighting and completion on an earlier revision of the feature text, not application behavior.

@@ -1,0 +1,68 @@
+@startuml gameplay-activity
+title Play a Domino Match — activity
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+start
+:Use the already full, configured match;
+note right
+  Precondition: authenticated participants;
+  2 or 3 individual players (draw), or
+  4 players in fixed opposing-seat teams (block).
+  Joining and inviting are separate use cases.
+end note
+:Shuffle the 28 unique double-six tiles;\ndeal 7 tiles to each participant;
+if (4 participants?) then (yes)
+  :No boneyard; holder of 6|6 opens with 6|6;
+else (2 or 3)
+  :Keep undealt tiles in the boneyard;\nhighest dealt double opens with that double;
+  note right
+    If no double was dealt: highest total pips
+    opens; break ties by highest end.
+  end note
+endif
+:Apply opening placement;\nadvance to next seat; reset consecutive passes;
+:Display board, own hand and active seat;
+while (Match still active?) is (yes)
+  :Receive an action from any participant;\nvalidate turn and requested action;
+  note right
+    Place: owned tile matches selected end.
+    Draw: individual variant, no legal placement,
+    and stock remains.
+    Pass: no legal placement and no stock.
+  end note
+  if (Action valid?) then (no)
+    :Explain rejection;\nleave board, hands, turn and passes unchanged;
+  else (yes)
+    if (Draw?) then (yes)
+      repeat
+        :Draw one tile into active player's hand;
+      repeat while (No legal tile and stock remains?) is (yes) not (no)
+      :Show updated hand and stock count;\nkeep same turn for placement or pass;
+    else (place or pass)
+      if (Placement?) then (yes)
+        :Place tile; remove it from hand;\nreset consecutive passes;
+        if (Hand now empty?) then (yes)
+          :End match immediately;\nplayer wins (2/3) or team wins (4);
+        else (no)
+          :Advance to next seat;
+        endif
+      else (pass)
+        :Record pass;
+        if (All participants passed consecutively?) then (yes)
+          :End blocked match;\nlowest personal pips (2/3) or team pips (4) wins;\nequal lowest totals tie;
+        else (no)
+          :Advance to next seat;
+        endif
+      endif
+    endif
+    :Make accepted state available to all participants;\nshow each player only their own hand;
+  endif
+endwhile (no)
+:Display winner or tie and end reason;\nshow pip totals for a blocked result;
+stop
+note right
+  Client success requires a confirmed server response.
+  Missing delivery is not a server rejection or rollback.
+  Disconnect/recovery behavior remains unresolved.
+end note
+@enduml

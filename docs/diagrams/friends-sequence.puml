@@ -1,0 +1,54 @@
+@startuml friends-sequence
+title Send a Friend Request — search, validation and persistence
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+autonumber
+actor Sender
+boundary "Sender client" as Client
+control "Friend service" as Service
+database "Request store" as Store
+note over Sender, Store
+  Precondition: sender is authenticated.
+  Search: case-insensitive username substring; exclude sender.
+  Hidden/blocked-user policies remain unresolved.
+end note
+loop Search / revise until recipient selected or sender cancels
+  Sender -> Client: Enter or revise query
+  Client -> Service: Search users(query)
+  Service --> Client: Matching users or empty result
+  Client --> Sender: Display results or no results
+end
+alt Cancel search, selection or send confirmation
+  Sender -> Client: Cancel
+  Client --> Sender: Return without sending
+else Select recipient and confirm sending
+  Sender -> Client: Select recipient; confirm send
+  Client -> Service: Send friend request(recipient)
+  Service -> Service: Validate self / friendship / pending direction
+  alt Self, already friends, or outgoing pending request
+    Service --> Client: Reject with reason; no new request
+    Client --> Sender: Display rejection, not success
+  else Incoming pending request exists
+    Service --> Client: Return existing incoming request; do not send another
+    Client --> Sender: Show incoming request with Accept / Decline
+    note right of Client: End send goal; handling incoming request is separate.
+  else Eligible recipient
+    Service -> Store: Store pending request; enforce one per account pair
+    alt Save successful
+      Store --> Service: Confirm stored and available to recipient
+      Service --> Client: Confirm request sent (pending)
+      Client --> Sender: Display confirmed pending request
+    else Save failed
+      Store --> Service: Save failure
+      Service --> Client: Report failure, not success
+      Client --> Sender: Display failure
+    end
+  end
+end
+note over Sender, Store
+  Sending alone never creates friendship; acceptance/decline is separate.
+  Self is rejected by the service even though search excludes sender.
+  A missing response is not a confirmed rejection or save failure.
+  Without confirmation the client must not claim success; recovery is unresolved.
+end note
+@enduml

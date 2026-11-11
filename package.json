@@ -1,6 +1,9 @@
 {
   "name": "dom1no-gherkin-demo",
   "private": true,
+  "engines": {
+    "node": "22 || 24 || >=26"
+  },
   "scripts": {
     "test:gherkin-demo": "cucumber-js docs/features/DUC-02-send-friend-request.feature --name \"Find a player by username\" --require tests/steps/friend-search.steps.js"
   },

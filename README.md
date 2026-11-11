@@ -43,4 +43,4 @@ Each new blog update should briefly explain what supported or challenged these p
 - [Project management](docs/project-management.md) — current sprint, reports and remaining access/IDE setup
 - [Team blog](https://dom1no.nulkode.dev) — published progress and peer comments
 - [Unpublished correction post](docs/blog/2026-11-09-repository-corrections.md) — concrete AI before/after example and verification results
-- [Week 6 draft](docs/blog/2026-11-11-week-6-scrum-and-traceability.md) — sprint planning and traceability; not yet published
+- [Week 6: Making Our Project Work Visible](https://dom1no.nulkode.dev/2026/11/11/week-6-making-our-project-work-visible/) — sprint planning, time reports and verified IDE/Git integration

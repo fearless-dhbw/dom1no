@@ -12,21 +12,21 @@ The earlier Inception board is historical. We created a team-editable board beca
 
 ## What is planned
 
-The sprint is configured and active. Its seven tasks have one responsible assignee each, an estimate, the Elaboration phase and a RUP workflow. These are initial planning estimates, not a claim that the whole team has agreed to this commitment.
+The sprint is started: choosing Start sprint removed that button and the board showed 7 days left. Its seven tasks have one responsible assignee each, an estimate, the Elaboration phase and a RUP workflow. These are initial planning estimates, not a claim that the whole team has agreed to this commitment.
 
 | Task | Responsible person | Estimate | RUP workflow |
 | --- | --- | --- | --- |
 | [DOM-2 — Choose the technology stack](https://dom1no-dhbw.youtrack.cloud/issue/DOM-2) | Darío (`nulkode`) | 1 h 30 min | Analysis & Design |
 | [DOM-30 — Review the current SRS](https://dom1no-dhbw.youtrack.cloud/issue/DOM-30) | Sahil | 1 h | Requirements |
 | [DOM-27 — Review corrected PlantUML / PR #5](https://dom1no-dhbw.youtrack.cloud/issue/DOM-27) | Mannoubi (`mannoubim26`) | 45 min | Analysis & Design |
-| [DOM-34 — Resolve guest access, Git integration and tag permissions](https://dom1no-dhbw.youtrack.cloud/issue/DOM-34) | Sahil | 45 min | Environment |
-| [DOM-35 — Demonstrate IDE tasks, time and Git with DUC-02](https://dom1no-dhbw.youtrack.cloud/issue/DOM-35) | Darío | 45 min | Environment |
+| [DOM-34 — Resolve guest access and use-case tag permissions](https://dom1no-dhbw.youtrack.cloud/issue/DOM-34) | Sahil | 45 min | Environment |
+| [DOM-35 — Verify VS Code tasks, workflow timing and Git](https://dom1no-dhbw.youtrack.cloud/issue/DOM-35) | Darío | 45 min | Environment |
 | [DOM-36 — Configure the board, dashboard and reports](https://dom1no-dhbw.youtrack.cloud/issue/DOM-36) | Darío | 1 h | Environment |
 | [DOM-37 — Draft and review the Week 6 blog](https://dom1no-dhbw.youtrack.cloud/issue/DOM-37) | Darío | 45 min | Project Management |
 
-The total is **390 minutes (6 h 30 min)**. DOM-2 depends on the SRS review; DOM-35 depends on the access/integration task; the blog task depends on those setup and demonstration results. The current Assignee field supports one owner, not multiple assignees. Time entries can record different contributors.
+The initial total is **390 minutes (6 h 30 min)**. The configuration and IDE/Git verification tasks are now Fixed. DOM-2 depends on the SRS review; the blog's final evidence review still depends on public access. The current Assignee field supports one owner, not multiple assignees. Time entries can record different contributors.
 
-For use-case reporting, distinguish work exclusive to DUC-01 or DUC-02 from work shared across them. The SRS and diagram reviews are shared work (`UC-MULTI`), not separate hours charged in full to both use cases. The existing DUC-02 tag cannot yet be applied by the setup account; DOM-35 identifies DUC-02 explicitly until its owner shares the tag with the team. Do not create a duplicate tag to bypass this permission.
+For use-case reporting, distinguish work exclusive to DUC-01 or DUC-02 from work shared across them. The SRS and diagram reviews are shared work (`UC-MULTI`), not separate hours charged in full to both use cases. The existing DUC-02 tag still needs its owner or an administrator to share tagging permission with the team. The IDE demonstration ultimately used real documentation work on DOM-37, so its interval is not charged to a game use case.
 
 ### Proposed working rhythm
 
@@ -40,15 +40,15 @@ Available time reports separate [person](https://dom1no-dhbw.youtrack.cloud/repo
 
 The existing In Progress timer was already operational, so no replacement workflow was attached. Changing DOM-36 from Open to In Progress populated `Timer time`; changing it to Fixed when configuration finished cleared that field and automatically created a 3-minute work item. The entry identifies this as agent-led API configuration, covering only the actual active interval—not IDE work or total human effort. Its duration was not manually entered or adjusted. These observed transitions match the [In Progress Work Timer behavior](https://www.jetbrains.com/help/youtrack/cloud/workflow-work-timer.html). Do not leave a task running after work ends.
 
-## Finish the access and IDE demonstration
+## Access and verified IDE/Git integration
 
-Public access still needs a YouTrack administrator. VS Code is now connected using **YouTrack for VS Code (`maximtrp.youtrack-ext`, version 2.0.0)**: the actual Elaboration#1 issue list loaded successfully. Its token is stored in VS Code SecretStorage, not repository settings. This verifies task-list integration, not yet IDE time logging or server-side Git linkage.
+Public access still needs a YouTrack administrator. VS Code is connected using **YouTrack for VS Code (`maximtrp.youtrack-ext`, version 2.0.0)**: the actual Elaboration#1 issue list loaded successfully. Its token is stored in VS Code SecretStorage, not repository settings. Git linkage is also verified: the real [Week 6 documentation commit](https://github.com/fearless-dhbw/dom1no/commit/9d2961300416751426b6f175169a3b299824c8e1), pushed to the team repository with `DOM-37` in its message, automatically appeared in that issue's VCS changes.
 
 ### 1. Administrator: make the evidence readable
 
 In DOM-34, open **Administration → Access Management → Users → guest** and unban the account if necessary. Assign a read-only role scoped to **DOM only**, with **Read Project Basic**, **Read Issue** and **Read Issue Comment** so visitors can read the linked evidence. YouTrack 2026.2 may require creating this custom role instead of selecting the former Issue Reader role. Check dashboard and report sharing as well, then open the dashboard, sprint, a task and reports in a private browser without logging in. Do not grant guest editing, administration or global project access.
 
-Give the team permission to use the existing DUC-02 tag and apply it to the relevant issues. For Git, authorize the intended GitHub repository and include the branches, commits and pull requests used by the team. The local remotes are `origin` → `fearless-dhbw/dom1no` and `fork` → `0dvn/dom1no`; confirm which one receives the demonstration commit. Follow the [GitHub integration instructions](https://www.jetbrains.com/help/youtrack/cloud/github-integration.html), then verify an actual referenced commit in the issue's VCS changes. A local remote or issue ID in a commit message alone does not prove server-side integration.
+Give the team permission to use the existing DUC-02 tag and apply it to relevant use-case issues. No new GitHub authorization is needed for the tested route: pushing an issue-ID commit to `origin` → `fearless-dhbw/dom1no` produced an actual VCS association. This does not independently verify every fork or branch configuration.
 
 ### 2. VS Code: select the real sprint task
 
@@ -56,10 +56,10 @@ Open this repository (`repo/`, not the private parent workspace). In the YouTrac
 
 Enter the actual issue ID in VS Code's Source Control commit message. This checkout also has `commit.template` set to [`.gitmessage`](../.gitmessage); in another checkout, run `git config --local commit.template .gitmessage`. The template is a reminder, not automatic attachment to YouTrack.
 
-### 3. Record one real interval and change
+### 3. IDE-driven time tracking: verified
 
-Use the existing [DUC-02 friend-search demonstration](features/README.md) as the work context: run `npm ci` and `npm run test:gherkin-demo`, inspect the selected scenario and record the observed IDE connection and test results in this guide. Correct the scenario or documentation only if the work reveals a genuine problem; no artificial product change is needed to demonstrate traceability.
+In VS Code, right-click the real issue and choose **Update → Issue State → In Progress** when work starts. Choose a non-running state when work ends. The extension has no standalone timer; these IDE actions drive YouTrack's existing In Progress workflow, which is the only logger.
 
-The connected extension has no standalone work timer. IDE-driven time logging remains to be verified; task-list access alone is not that demonstration. The server's state-based timer is already evidenced by DOM-36. Do not give a plaintext-token timer extension credentials merely to complete a screenshot, and never post the same interval through two loggers. The official [JetBrains integration](https://www.jetbrains.com/help/youtrack/cloud/youtrack-integration-plugin.html) supports a manual timer if VS Code cannot supply the required demonstration.
+This was tested on actual DOM-37 documentation work: the IDE changed it to In Progress at **07:25:29 UTC** and back to Open at **07:26:51 UTC**, leaving final public-evidence review open. YouTrack cleared `Timer time` and automatically created work item **208-31**, recording **1 minute** without a manual duration adjustment. Its description identifies the agent-operated IDE interval, not total human effort. The pushed commit above provides the Git link to the same task.
 
-Review the diff, run any relevant checks, commit with the actual issue ID and push to the authorized repository/branch. Confirm the commit appears under DOM-35's VCS changes and that the time entry appears in the relevant reports. Capture those actual results, not mockups. Update the [Week 6 draft](blog/2026-11-11-week-6-scrum-and-traceability.md) with the observed outcome before publication.
+The [genuine task-list capture](evidence/week6-youtrack-vscode-tasks.png) is cropped to public project content. No private workspace file or token is included. The existing [Week 6 post](https://dom1no.nulkode.dev/2026/11/11/week-6-making-our-project-work-visible/) contains three focused images and the integration results. The remaining access check is anonymous reading, not another IDE installation.

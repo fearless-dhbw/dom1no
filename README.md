@@ -45,3 +45,4 @@ Each new blog update should briefly explain what supported or challenged these p
 - [Team blog](https://dom1no.nulkode.dev) — published progress and peer comments
 - [Week 6: Making Our Project Work Visible](https://dom1no.nulkode.dev/2026/11/11/week-6-making-our-project-work-visible/) — sprint planning, time reports and verified IDE/Git integration
 - [Week 7: Retrospective](https://dom1no.nulkode.dev/2026/11/18/week-7-retrospective/) — team retrospective and next steps
+- [Week 8: Choosing Our Stack and Designing dom1no’s Architecture](https://dom1no.nulkode.dev/2026/11/25/week-8-choosing-our-stack-and-designing-dom1nos-architecture/) — stack decision, MVC/MVVM architecture, CRUD, UML and EER diagrams

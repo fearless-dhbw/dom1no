@@ -1,0 +1,243 @@
+@startuml architecture-class-diagram
+!pragma layout smetana
+title DOM1NO — Architectural Class Diagram (Marked MVVM & Controller–Service–Repository Regions)
+top to bottom direction
+hide circle
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 30
+skinparam ranksep 38
+
+package "Client — View (:client, Compose Multiplatform)" as PkgView #E8F1FD {
+  class MatchScreen <<composable>> {
+    - uiState: MatchUiState
+    + onSelectTile(tile: TileDto, end: BoardEnd): void
+    + onDrawRequested(): void
+    + onPassRequested(): void
+  }
+
+  class FriendsScreen <<composable>> {
+    - uiState: FriendsUiState
+    + onQueryChanged(query: String): void
+    + onSendRequest(recipientId: UUID): void
+    + onRespondRequest(requestId: UUID, accept: Boolean): void
+  }
+}
+
+package "Client — ViewModel (:client, MVVM)" as PkgVM #FFF4E5 {
+  class MatchViewModel {
+    - uiState: StateFlow<MatchUiState>
+    + submitPlacement(tile: TileDto, end: BoardEnd): void
+    + submitDraw(): void
+    + submitPass(): void
+    + onServerStateUpdate(update: MatchStateMessage): void
+  }
+
+  class FriendsViewModel {
+    - uiState: StateFlow<FriendsUiState>
+    + searchPlayers(query: String): void
+    + sendFriendRequest(recipientId: UUID): void
+    + respondToRequest(requestId: UUID, accept: Boolean): void
+    + removeFriend(friendId: UUID): void
+  }
+}
+
+package "Client — Model / Transport (:client + :shared)" as PkgTransport #EAF7EE {
+  class MatchSocketClient {
+    - endpointUrl: String
+    + connect(matchId: UUID, token: String): void
+    + sendCommand(cmd: MatchCommand): void
+    + receiveUpdates(): Flow<MatchStateMessage>
+  }
+
+  class SocialApiClient {
+    - baseUrl: String
+    + searchUsers(query: String): List<PlayerSummary>
+    + createFriendRequest(recipientId: UUID): RequestResult
+    + respondToRequest(requestId: UUID, accept: Boolean): void
+    + deleteFriend(friendId: UUID): void
+  }
+}
+
+package "Server — Controller (:server, Spring Web & WebSocket)" as PkgCtrl #FFF4E5 {
+  class MatchWebSocketController {
+    + handleCommand(actor: Principal, cmd: MatchCommand): void
+    + broadcastPlayerViews(matchId: UUID): void
+  }
+
+  class FriendController {
+    + searchPlayers(actor: Principal, query: String): List<PlayerSummary>
+    + sendRequest(actor: Principal, recipientId: UUID): ResponseEntity
+    + acceptRequest(actor: Principal, requestId: UUID): ResponseEntity
+    + declineRequest(actor: Principal, requestId: UUID): ResponseEntity
+    + removeFriend(actor: Principal, friendId: UUID): ResponseEntity
+  }
+}
+
+package "Server — Service & Authoritative Domain Model (:server)" as PkgService #EAF7EE {
+  class MatchService {
+    - activeMatches: Map<UUID, Match>
+    + startMatch(matchId: UUID): Match
+    + processPlacement(matchId: UUID, actorId: UUID, tile: Tile, end: BoardEnd): MoveOutcome
+    + processDraw(matchId: UUID, actorId: UUID): MoveOutcome
+    + processPass(matchId: UUID, actorId: UUID): MoveOutcome
+    + buildPlayerView(match: Match, viewerId: UUID): MatchStateMessage
+  }
+
+  class FriendService {
+    + searchByUsername(actorId: UUID, query: String): List<Player>
+    + sendRequest(senderId: UUID, recipientId: UUID): RequestOutcome
+    + acceptRequest(actorId: UUID, requestId: UUID): Friendship
+    + declineRequest(actorId: UUID, requestId: UUID): void
+    + removeFriendship(actorId: UUID, friendId: UUID): void
+  }
+
+  class Match {
+    - matchId: UUID
+    - configuration: MatchConfiguration
+    - status: MatchStatus
+    - activeSeatIndex: Int
+    - consecutivePasses: Int
+    - boneyard: List<Tile>
+    + dealAndOpen(): void
+    + applyPlacement(seatIndex: Int, tile: Tile, end: BoardEnd): MoveOutcome
+    + drawUntilPlayable(seatIndex: Int): List<Tile>
+    + recordPass(seatIndex: Int): MoveOutcome
+    + evaluateOutcome(): MatchResult
+  }
+
+  class Board {
+    - openLeft: Int?
+    - openRight: Int?
+    - placedTiles: List<Tile>
+    + canPlace(tile: Tile, end: BoardEnd): Boolean
+    + place(tile: Tile, end: BoardEnd): void
+  }
+
+  class Seat {
+    - seatNumber: Int
+    - teamNumber: Int?
+    - hand: List<Tile>
+    + hasTile(tile: Tile): Boolean
+    + removeTile(tile: Tile): void
+    + remainingPips(): Int
+  }
+
+  class Tile <<value object>> {
+    - leftPip: Int
+    - rightPip: Int
+    + matches(endValue: Int): Boolean
+    + pipSum(): Int
+    + isDouble(): Boolean
+  }
+
+  class MatchRecord <<entity>> {
+    - matchId: UUID
+    - configuration: MatchConfiguration
+    - inviteCode: String?
+    - status: MatchStatus
+    - endReason: EndReason?
+  }
+
+  class Player <<entity>> {
+    - playerId: UUID
+    - username: String
+    - passwordHash: String
+  }
+
+  class FriendRequest <<entity>> {
+    - requestId: UUID
+    - status: RequestStatus
+    + isPending(): Boolean
+  }
+
+  class Friendship <<entity>> {
+    - friendshipId: UUID
+  }
+}
+
+package "Server — Repository (:server, Spring Data JPA)" as PkgRepo #F2EEFA {
+  interface MatchRepository <<interface>> {
+    + findByInviteCode(code: String): Optional<MatchRecord>
+  }
+
+  interface PlayerRepository <<interface>> {
+    + findByUsernameIgnoreCaseContaining(q: String): List<Player>
+  }
+
+  interface FriendRequestRepository <<interface>> {
+    + findPendingBetween(a: UUID, b: UUID): Optional<FriendRequest>
+  }
+
+  interface FriendshipRepository <<interface>> {
+    + existsBetween(a: UUID, b: UUID): Boolean
+    + findAllForPlayer(playerId: UUID): List<Friendship>
+  }
+
+  interface "JpaRepository<T, ID>" as JpaRepo <<framework interface>> {
+    + save(entity: T): T
+    + findById(id: ID): Optional<T>
+    + findAll(): List<T>
+    + deleteById(id: ID): void
+  }
+}
+
+' Client MVVM relationships
+MatchScreen "1" --> "1" MatchViewModel : observes
+FriendsScreen "1" --> "1" FriendsViewModel : observes
+MatchViewModel "1" --> "1" MatchSocketClient : uses
+FriendsViewModel "1" --> "1" SocialApiClient : uses
+
+' Cross-process transport dependencies
+MatchSocketClient ..> MatchWebSocketController : <<WebSocket / Protobuf>>
+SocialApiClient ..> FriendController : <<HTTP / Protobuf>>
+
+' Server Controller -> Service
+MatchWebSocketController "1" --> "1" MatchService : delegates
+FriendController "1" --> "1" FriendService : delegates
+
+' Server Service -> Domain
+MatchService "1" --> "0..*" Match : coordinates
+MatchService ..> MatchRecord : maps outcome
+FriendService ..> FriendRequest : validates / creates
+FriendService ..> Friendship : creates / removes
+
+' Authoritative Domain Model relationships (OMG UML 2.5.1)
+Match "1" *-- "1" Board : owns
+Match "1" *-- "2..4" Seat : assigns
+Match "1" --> "0..14" Tile : boneyard
+Board "1" --> "0..28" Tile : chain
+Seat "1" --> "0..*" Tile : hand
+Seat "0..*" --> "1" Player : occupied by
+
+FriendRequest "0..*" --> "1" Player : sender
+FriendRequest "0..*" --> "1" Player : recipient
+Friendship "0..*" --> "2" Player : connects
+
+' Keep Repository cleanly below Domain entities
+Tile -[hidden]-> MatchRepository
+MatchRecord -[hidden]-> MatchRepository
+Player -[hidden]-> PlayerRepository
+
+' Server Service -> Repository
+MatchService --> MatchRepository : persists
+FriendService --> PlayerRepository : queries
+FriendService --> FriendRequestRepository : persists
+FriendService --> FriendshipRepository : persists
+
+' Spring Data JPA inheritance (interface extends interface = Generalization)
+MatchRepository --|> JpaRepo
+PlayerRepository --|> JpaRepo
+FriendRequestRepository --|> JpaRepo
+FriendshipRepository --|> JpaRepo
+
+legend bottom
+  |= Region |= Architectural Role |
+  | <#E8F1FD> Client — View | Declarative Compose Multiplatform UI screens |
+  | <#FFF4E5> ViewModel / Controller | Client state holders and Spring HTTP/WebSocket entry points |
+  | <#EAF7EE> Model / Service / Domain | Transport clients, pure-Kotlin rules engine and JPA entities |
+  | <#F2EEFA> Repository | Spring Data JPA CRUD persistence contracts |
+endlegend
+@enduml

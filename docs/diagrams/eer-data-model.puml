@@ -1,0 +1,93 @@
+@startuml eer-data-model
+!pragma layout smetana
+title DOM1NO — Enhanced Entity-Relationship (EER) Database Model (PostgreSQL)
+top to bottom direction
+hide circle
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam nodesep 35
+skinparam ranksep 45
+
+entity "players" as players {
+  * player_id : UUID <<PK>>
+  --
+  * username : VARCHAR(32) <<UNIQUE>>
+  * password_hash : VARCHAR(255)
+  * created_at : TIMESTAMPTZ
+}
+
+entity "friend_requests" as friend_requests {
+  * request_id : UUID <<PK>>
+  --
+  * sender_id : UUID <<FK>>
+  * recipient_id : UUID <<FK>>
+  * status : VARCHAR(16)
+  * created_at : TIMESTAMPTZ
+}
+
+entity "friendships" as friendships {
+  * friendship_id : UUID <<PK>>
+  --
+  * player_low_id : UUID <<FK, UQ_PAIR>>
+  * player_high_id : UUID <<FK, UQ_PAIR>>
+  * created_at : TIMESTAMPTZ
+}
+
+entity "conversations" as conversations {
+  * conversation_id : UUID <<PK>>
+  --
+  * player_low_id : UUID <<FK, UQ_PAIR>>
+  * player_high_id : UUID <<FK, UQ_PAIR>>
+  * created_at : TIMESTAMPTZ
+}
+
+entity "chat_messages" as chat_messages {
+  * message_id : UUID <<PK>>
+  --
+  * conversation_id : UUID <<FK>>
+  * sender_id : UUID <<FK>>
+  * body : TEXT
+  * sent_at : TIMESTAMPTZ
+}
+
+entity "matches" as matches {
+  * match_id : UUID <<PK>>
+  --
+  * configuration : VARCHAR(32)
+  * visibility : VARCHAR(16)
+  invite_code : VARCHAR(32) <<UNIQUE>>
+  host_player_id : UUID <<FK>>
+  * status : VARCHAR(16)
+  end_reason : VARCHAR(16)
+  * created_at : TIMESTAMPTZ
+}
+
+entity "match_participants" as match_participants {
+  * match_id : UUID <<PK, FK>>
+  * seat_number : SMALLINT <<PK>>
+  --
+  * player_id : UUID <<FK, UQ(match_id, player_id)>>
+  team_number : SMALLINT
+  remaining_pips : SMALLINT
+  outcome : VARCHAR(8)
+}
+
+' Relationships (Crow's Foot notation — every FK represented explicitly)
+players ||--o{ friend_requests : "sends"
+players ||--o{ friend_requests : "receives"
+
+players ||--o{ friendships : "low"
+players ||--o{ friendships : "high"
+
+players ||--o{ conversations : "low"
+players ||--o{ conversations : "high"
+
+conversations ||--o{ chat_messages : "contains"
+players ||--o{ chat_messages : "sends"
+
+players |o--o{ matches : "hosts (opt.)"
+players ||--o{ match_participants : "joins"
+matches ||--o{ match_participants : "seats (0..4 waiting;\n2..4 active)"
+
+caption Constraints: friend_requests enforces CHECK (sender_id <> recipient_id) and a partial UNIQUE index\non unordered pair (LEAST, GREATEST) WHERE status = 'PENDING' (SRS FR-FRD-03).\nfriendships and conversations enforce CHECK (player_low_id < player_high_id) and UNIQUE (player_low_id, player_high_id).\nLive match state (hands, boneyard, board chain, turn order) lives in authoritative server memory;\nPostgreSQL stores rooms, seats and final outcomes (WIN, LOSS, DRAW per participant).
+@enduml

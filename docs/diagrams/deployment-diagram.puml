@@ -1,0 +1,39 @@
+@startuml deployment-diagram
+!pragma layout smetana
+title DOM1NO — UML Deployment Diagram
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam node {
+  BackgroundColor #F8F9FA
+  BorderColor #444444
+}
+
+node "Player Device\n(1..*)" <<device>> as ClientDevice {
+  node "Client Target OS" <<executionEnvironment>> as ClientOS {
+    artifact "dom1no-client\n(Compose Multiplatform)" <<artifact>> as ClientApp
+  }
+}
+
+node "Server Host\n(1)" <<device>> as ServerHost {
+  node "Docker Engine / Docker Compose" <<executionEnvironment>> as DockerEnv {
+    node "app-server : Container\n(JVM / Kotlin)" <<executionEnvironment>> as AppContainer {
+      artifact "dom1no-server.jar\n(Spring Boot)" <<artifact>> as ServerJar
+    }
+
+    node "postgres-db : Container" <<executionEnvironment>> as DbContainer {
+      artifact "PostgreSQL 16 DBMS" <<artifact>> as PostgresBin
+      artifact "dom1no_db\n(pgdata volume)" <<database>> as DbVolume
+      PostgresBin ..> DbVolume : reads / writes
+    }
+  }
+}
+
+ClientDevice -- AppContainer : <<HTTP(S) / WS(S) + Protobuf>>\nREST CRUD & live turns
+AppContainer -- DbContainer : <<JDBC / TCP>>\nDocker internal network
+ServerJar ..> PostgresBin : Spring Data JPA
+
+caption Multiple player devices connect to one authoritative Spring Boot server container paired with PostgreSQL via Docker Compose.\nSpecific KMP client targets remain open. Local development uses HTTP/WS; public deployments enforce HTTPS/WSS via TLS termination (SRS NFR-SEC-05).
+@enduml

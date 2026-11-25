@@ -34,7 +34,7 @@ Read the [game rules](game-rules.md) for the exact behavior, then the two detail
 
 A **player** is a person using dom1no. Account-related actions require a signed-in player. A **match** is one game, not a sequence of scored rounds. A **hand** contains one player's unplayed tiles. The **boneyard** contains the undealt tiles in individual play. In partnership play, opposite seats form a team.
 
-The system includes the player interface and the service that decides whether actions are accepted. This accepted state is the **authoritative match state**: clients cannot independently decide that a move succeeded. The hosting architecture and client framework are not yet chosen.
+The system includes the player interface and the service that decides whether actions are accepted. This accepted state is the **authoritative match state**: clients cannot independently decide that a move succeeded. The chosen technology stack, MVC/MVVM structure, deployment topology and database model are documented in the [Software Architecture Document](SAD.md).
 
 Online functions need a network connection. If an action has no confirmed response, the interface must not claim success. A lost response is not proof that the service rejected the action; reconnecting and recovering the result remain open decisions.
 
@@ -151,12 +151,11 @@ Sources for the academic structure are the course's Week 3 SRS, Week 4 Use Cases
 
 ## 7. Open decisions
 
-These recommendations need a team answer before they become requirements. They do not change the agreed game rules, search matching or one-pending-request-per-pair policy.
+These recommendations need a team answer before they become requirements. They do not change the agreed game rules, search matching, one-pending-request-per-pair policy or the technology stack documented in the [Software Architecture Document](SAD.md).
 
 | Decision | Alternatives and recommendation | Work affected |
 | --- | --- | --- |
-| Client platform | Browser first or Compose Multiplatform. Recommend a browser so classmates can join without installation. No stack is selected. | Application setup and device-specific performance checks. |
-| Disconnects and unconfirmed actions | Pause and allow rejoin, or terminate without a result. Recommend pause/rejoin; agree a deadline and how clients recover an unconfirmed outcome before adding forfeits or automatic retries. | Recovery behavior and acceptance scenarios. |
+| Disconnects and unconfirmed actions | Pause and allow rejoin, or terminate without a result. Recommend pause/rejoin; agree a deadline and how clients recover an unconfirmed outcome before adding forfeits or automatic retries. | Recovery behavior, optional match state snapshots and acceptance scenarios. |
 | Empty searches and request lifecycle | Empty queries can show no results or ask for a username; recommend the prompt. Declining can permit a new request immediately or impose a cooldown; recommend a new explicit request initially. Visibility, blocking and withdrawal of submitted requests still need policies. | Search edge cases, request retry and privacy. |
 | Private invitations | Shareable room link or direct invitation to an existing friend. Recommend a room link available to the host; agree eligibility and link lifetime. | Detailed invitation flow. |
 | Friend chat | Retained or session-only history; live delivery or refresh. Recommend retained history and live delivery, with explicit retention and unfriending behavior. | Detailed chat flow and data lifecycle. |

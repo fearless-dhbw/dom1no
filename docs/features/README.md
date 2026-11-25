@@ -18,7 +18,7 @@ npm run test:gherkin-demo
 
 Use Node.js 22, 24 or 26+. The command selects only `Find a player by username`: five Gherkin steps against an in-memory fixture, not an application or service. Verification on 9 November passed; Cucumber reports **six steps**, including the setup hook. The mixed-case substring and sender-exclusion scenarios were also run successfully with the same definitions. The remaining scenarios are descriptive; executing all of them against the application is later work.
 
-The search runs directly in Friends, matching the wireframe. VS Code settings connect the features to these demonstration definitions for autocomplete. The [correction example](../blog/2026-11-09-repository-corrections.md#what-the-checks-tell-us) explains what the checks demonstrate.
+The search runs directly in Friends, matching the wireframe. VS Code settings connect the features to these demonstration definitions for autocomplete.
 
 ## IDE evidence
 

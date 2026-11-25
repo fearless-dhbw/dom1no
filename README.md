@@ -10,6 +10,7 @@ This repository contains the Software Engineering I specification and design wor
 2. [Domino rules: setup, drawing/passing and how a match ends](docs/game-rules.md)
 3. Detailed use cases: [Play a match](docs/use-cases/DUC-01-play-domino-match.md) and [Send a friend request](docs/use-cases/DUC-02-send-friend-request.md), with activities, wireframes and scenarios
 4. [Gherkin scenarios and IDE evidence](docs/features/README.md)
+5. [Software Architecture Document (SAD): stack, MVC/MVVM, UML and EER data model](docs/SAD.md)
 
 Only two of the five semester goals are detailed now. The [SRS open decisions](docs/SRS.md#7-open-decisions) distinguish remaining proposals from agreed behavior; implementing the application and executing its scenarios are later milestones.
 
@@ -42,5 +43,5 @@ Each new blog update should briefly explain what supported or challenged these p
 
 - [Project management](docs/project-management.md) — current sprint, time reports and verified IDE/Git integration
 - [Team blog](https://dom1no.nulkode.dev) — published progress and peer comments
-- [Unpublished correction post](docs/blog/2026-11-09-repository-corrections.md) — concrete AI before/after example and verification results
 - [Week 6: Making Our Project Work Visible](https://dom1no.nulkode.dev/2026/11/11/week-6-making-our-project-work-visible/) — sprint planning, time reports and verified IDE/Git integration
+- [Week 7: Retrospective](https://dom1no.nulkode.dev/2026/11/18/week-7-retrospective/) — team retrospective and next steps

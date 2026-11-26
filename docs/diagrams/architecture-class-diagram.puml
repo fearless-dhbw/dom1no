@@ -187,8 +187,8 @@ package "Server — Repository (:server, Spring Data JPA)" as PkgRepo #F2EEFA {
 ' Client MVVM relationships
 MatchScreen "1" --> "1" MatchViewModel : observes
 FriendsScreen "1" --> "1" FriendsViewModel : observes
-MatchViewModel "1" --> "1" MatchSocketClient : uses
-FriendsViewModel "1" --> "1" SocialApiClient : uses
+MatchViewModel "1" --> "1" MatchSocketClient : sends via
+FriendsViewModel "1" --> "1" SocialApiClient : calls
 
 ' Cross-process transport dependencies
 MatchSocketClient ..> MatchWebSocketController : <<WebSocket / Protobuf>>

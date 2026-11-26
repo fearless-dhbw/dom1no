@@ -1,14 +1,13 @@
 @startuml architecture-overview
 !pragma layout smetana
-title DOM1NO — High-Level Architecture (MVVM Client + Authoritative Spring Boot Server)
+title DOM1NO — High-Level Architecture (UML Component Diagram)
 top to bottom direction
 skinparam shadowing false
 skinparam defaultFontName SansSerif
-skinparam packageStyle rectangle
+skinparam packageStyle folder
 skinparam componentStyle uml2
-skinparam roundcorner 6
 skinparam nodesep 35
-skinparam ranksep 40
+skinparam ranksep 42
 
 package ":client (Kotlin Multiplatform + Compose Multiplatform — MVVM)" as Client #F7F9FC {
   package "View" as ClientView #E8F1FD {
@@ -26,10 +25,10 @@ package ":client (Kotlin Multiplatform + Compose Multiplatform — MVVM)" as Cli
     [SocialApiClient] as HttpClient
   }
 
-  MatchView --> MatchVM : observes UiState /\ndispatches actions
-  SocialView --> SocialVM : observes UiState /\ndispatches actions
-  MatchVM --> SocketClient : match commands &\nstate updates
-  SocialVM --> HttpClient : REST / CRUD\nrequests
+  MatchView ..> MatchVM : observes UiState /\ndispatches actions
+  SocialView ..> SocialVM : observes UiState /\ndispatches actions
+  MatchVM ..> SocketClient : match commands &\nstate updates
+  SocialVM ..> HttpClient : REST / CRUD\nrequests
 }
 
 package ":server (Kotlin + Spring Boot — Controller–Service–Repository)" as Server #FAF9F6 {
@@ -49,19 +48,20 @@ package ":server (Kotlin + Spring Boot — Controller–Service–Repository)" a
     [Player / Friend / Chat\nRepositories] as SocialRepo
   }
 
-  WsCtrl --> MatchSvc : validates turn,\nactor & match
-  MatchSvc --> Rules : enforces\ngame rules
-  MatchSvc --> MatchRepo : persists rooms\n& match outcomes
-  RestCtrl --> SocialSvc : delegates CRUD\n& domain checks
-  SocialSvc --> SocialRepo : Spring Data JPA
+  WsCtrl ..> MatchSvc : validates turn,\nactor & match
+  MatchSvc ..> Rules : enforces\ngame rules
+  MatchSvc ..> MatchRepo : persists rooms\n& match outcomes
+  RestCtrl ..> SocialSvc : delegates CRUD\n& domain checks
+  SocialSvc ..> SocialRepo : Spring Data JPA
 }
 
 database "PostgreSQL\n(dom1no_db)" as DB #EFEFEF
 
-SocketClient <--> WsCtrl : <<WebSocket + Protobuf>>\ncommands & per-player state
-HttpClient <--> RestCtrl : <<HTTP + Protobuf>>\nGET / POST / PUT / DELETE
-MatchRepo --> DB : JDBC / SQL
-SocialRepo --> DB : JDBC / SQL
+SocketClient ..> WsCtrl : <<WebSocket + Protobuf>>\nmatch commands
+WsCtrl ..> SocketClient : <<WebSocket + Protobuf>>\nper-player state
+HttpClient ..> RestCtrl : <<HTTP + Protobuf>>\nGET / POST / PUT / DELETE
+MatchRepo ..> DB : <<JDBC / SQL>>
+SocialRepo ..> DB : <<JDBC / SQL>>
 
 caption Shared wire models live in :shared (kotlinx.serialization-protobuf).\nLive hands, boneyard and turn order remain authoritative in MatchService; each player receives only their own hand.
 @enduml

@@ -2,7 +2,7 @@
 
 **Authors:** Darío, Sahil, Mannoubi
 
-**Status:** Architecture and data design baseline (Week 8, 25 November 2026). This document defines the agreed target architecture; application implementation has not started yet and will follow this baseline.
+**Status:** Architecture and data design baseline (Week 8, 25 November 2026). Application implementation has not started yet and will follow this baseline.
 
 **Course:** Software Engineering I, DHBW
 
@@ -22,14 +22,10 @@ The architecture covers the five semester Use Cases defined in the SRS—playing
 
 | Term | Meaning |
 | --- | --- |
-| **Authoritative Server** | Server that holds the single accepted match state and validates every game action before broadcasting results. |
-| **CRUD** | Create, Read, Update, and Delete persistence operations on domain resources. |
-| **EER** | Enhanced Entity-Relationship diagram modeling database tables, keys, constraints, and cardinalities. |
+| **Authoritative Server** | Server holding the single accepted match state and validating every game action before broadcasting results. |
 | **JPA** | Jakarta Persistence API, used through Spring Data JPA for relational mapping and repository generation. |
 | **KMP** | Kotlin Multiplatform, sharing Kotlin code across modules and client targets. |
-| **MVC / MVVM** | Model–View–Controller and Model–View–ViewModel architectural patterns for separating presentation, coordination, and domain state. |
 | **Protobuf** | Protocol Buffers binary serialization format, used via `kotlinx.serialization-protobuf`. |
-| **SAD** | Software Architecture Document (RUP artifact). |
 
 ### 1.4 References
 
@@ -41,7 +37,7 @@ The architecture covers the five semester Use Cases defined in the SRS—playing
 
 ### 1.5 Overview
 
-Section 2 explains how MVC principles apply to dom1no's client and server architecture. Section 3 records the chosen frameworks, Gradle module structure, CRUD capabilities, and constraints. Section 4 presents the Overall Use Case Diagram and realizations. Section 5 provides the high-level architecture diagram and class diagram with marked architectural regions. Section 7 presents the UML Deployment Diagram, and Section 9 defines the PostgreSQL EER database model. Sections 6, 8, 10, and 11 are marked N/A per the Week 8 course requirements.
+Section 2 explains how MVC applies to dom1no's client and server architecture. Section 3 records the chosen frameworks, Gradle module structure, CRUD capabilities, and constraints. Section 4 links the Overall Use Case Diagram and realizations. Section 5 provides the high-level component architecture and class diagram with marked regions. Section 7 presents the deployment topology, and Section 9 defines the PostgreSQL EER database model. Sections 6, 8, 10, and 11 are N/A for the current milestone.
 
 ---
 
@@ -49,30 +45,17 @@ Section 2 explains how MVC principles apply to dom1no's client and server archit
 
 ### 2.1 MVC and Separation of Concerns
 
-**Model–View–Controller (MVC)** separates an application into three concerns so presentation, coordination, and domain logic can evolve and be tested independently:
-
-- **Model:** Manages domain state, business rules, and persistence independently of the user interface.
-- **View:** Renders state and forwards user interactions without owning authoritative data.
-- **Controller:** Mediates between user input and the Model, coordinating validation, state updates, and responses back to the View.
+**Model–View–Controller (MVC)** separates presentation (**View**), interaction coordination (**Controller**), and domain state/rules (**Model**) so each layer can change and be tested independently.
 
 ### 2.2 Application to dom1no
 
-dom1no is a multiplayer game with an **authoritative server**. The server owns match state and rule validation so no client can forge a move or inspect hidden hands (`SRS FR-ONL-06`, `FR-GAME-04`). dom1no applies MVC across two framework-native patterns:
-
-1. **Client (`:client`) — MVVM (Model–View–ViewModel)** with Compose Multiplatform:
-   - **View** (`MatchScreen`, `FriendsScreen`): Declarative Compose screens that observe immutable UI state and emit user events.
-   - **ViewModel** (`MatchViewModel`, `FriendsViewModel`): Holds observable `StateFlow` UI state, translates user events into network calls, and exposes confirmed, rejected, or unconfirmed feedback.
-   - **Model / Transport** (`MatchSocketClient`, `SocialApiClient`): Sends and receives binary Protocol Buffers payloads defined in `:shared` over WebSockets and HTTP.
-2. **Server (`:server`) — Controller–Service–Repository** with Spring Boot:
-   - **Controller** (`MatchWebSocketController`, `FriendController`, and auth/room/chat REST controllers): Handles HTTP/WebSocket transport, authenticated identity (`Principal`), and Protobuf serialization.
-   - **Service & Authoritative Domain Model** (`MatchService`, `FriendService`, `Match`, `Board`, `Seat`, `Tile`, `MatchRecord`, `Player`, `FriendRequest`, `Friendship`): Implements the MVC **Model**—enforcing all domino rules and social invariants.
-   - **Repository** (Spring Data JPA interfaces): Encapsulates PostgreSQL persistence behind typed CRUD interfaces.
+dom1no is a multiplayer game with an **authoritative server**: the server owns match state and rule validation so no client can forge a move or inspect hidden hands (`SRS FR-ONL-06`, `FR-GAME-04`). Accordingly, dom1no applies MVC across two complementary, framework-native patterns—**MVVM** on the Compose Multiplatform client (`:client`) and **Controller–Service–Repository** on the Spring Boot server (`:server`):
 
 | Classic MVC Concern | Client (`:client`, Compose Multiplatform — MVVM) | Server (`:server`, Spring Boot — Controller–Service–Repository) |
 | --- | --- | --- |
-| **View** | Declarative Compose screens (`MatchScreen`, `FriendsScreen`) | N/A (headless server returning Protobuf payloads) |
-| **Controller** | `ViewModel` (`MatchViewModel`, `FriendsViewModel`) | REST & WebSocket Controllers (`FriendController`, `MatchWebSocketController`) |
-| **Model** | Client transport & local UI state projections (`MatchSocketClient`, `SocialApiClient`) | Services, authoritative domain model (`Match`, `Board`, `Seat`, `Tile`), and JPA Repositories |
+| **View** | Declarative Compose screens (`MatchScreen`, `FriendsScreen`) rendering UI state and emitting user events | N/A (headless server returning Protobuf payloads) |
+| **Controller** | `ViewModel` (`MatchViewModel`, `FriendsViewModel`) holding `StateFlow` UI state and exposing confirmed, rejected, or unconfirmed feedback | REST & WebSocket Controllers (`FriendController`, `MatchWebSocketController`) handling transport and authenticated identity (`Principal`) |
+| **Model** | Client transport (`MatchSocketClient`, `SocialApiClient`) serializing `:shared` Protobuf payloads over WebSockets and HTTP | Services (`MatchService`, `FriendService`), pure-Kotlin rules engine (`Match`, `Board`, `Seat`, `Tile`), JPA entities, and Spring Data Repositories |
 
 ---
 
@@ -130,20 +113,15 @@ The two detailed Use Cases exercise both communication paths of the architecture
 
 ### 5.1 Overview
 
-The high-level architectural diagram shows the client MVVM layers (`:client`), shared Protobuf wire contracts (`:shared`), server Controller–Service–Repository layers (`:server`), and PostgreSQL persistence.
+The high-level component diagram shows the client MVVM layers (`:client`), shared Protobuf wire contracts (`:shared`), server Controller–Service–Repository layers (`:server`), and PostgreSQL persistence.
 
 ![High-level architecture](diagrams/architecture-overview.svg)
 
 [Editable PlantUML](diagrams/architecture-overview.puml)
 
-Two request lifecycles run through this structure:
-
-1. **HTTP / CRUD lifecycle (accounts, friends, rooms, chat):** `View` → `ViewModel` → `SocialApiClient` → HTTP + Protobuf → Spring `@RestController` → `@Service` → `JpaRepository` → PostgreSQL.
-2. **WebSocket / authoritative match lifecycle (turns, draw, pass, end-of-match):** `MatchScreen` → `MatchViewModel` → `MatchSocketClient` → WebSocket + Protobuf command → `MatchWebSocketController` → `MatchService` (per-match lock) → Domino Rules Engine (`Match`, `Board`, `Seat`, `Tile`) → per-player `MatchStateMessage` broadcast, with final outcomes persisted via `MatchRepository`.
-
 ### 5.2 Architecturally Significant Design Packages
 
-The class diagram follows OMG UML 2.5.1 notation with clearly marked architectural regions for the client MVVM layers and the server Controller–Service–Repository layers.
+The class diagram groups dom1no's core classes into client MVVM regions and server Controller–Service–Repository regions.
 
 ![Architectural class diagram](diagrams/architecture-class-diagram.svg)
 
@@ -160,12 +138,6 @@ The class diagram follows OMG UML 2.5.1 notation with clearly marked architectur
 | **Server — Service & Authoritative Domain Model (`:server`)** | `MatchService`, `FriendService`, `Match`, `Board`, `Seat`, `Tile`, `MatchRecord`, `Player`, `FriendRequest`, `Friendship` | Enforce domino rules, turn order, per-match locking, private-hand filtering, and friendship invariants. `Match`, `Board`, `Seat`, and `Tile` stay pure Kotlin with no JPA or Spring dependencies; `MatchService` maps match summaries to `MatchRecord`. `Board.place(tile, end)` rotates a legal tile automatically so the matching pip touches the chosen end ([Domino Rules](game-rules.md)). |
 | **Server — Repository (`:server`)** | `MatchRepository`, `PlayerRepository`, `FriendRequestRepository`, `FriendshipRepository` | Extend Spring Data's `JpaRepository<T, ID>` to provide CRUD persistence and domain queries against PostgreSQL. |
 
-#### UML Relationship Summary
-
-- **Composition (`*--`):** `Match` owns its `Board` (`1`) and `Seat`s (`2..4`); neither exists outside its match.
-- **Association (`-->`):** `Seat`, `FriendRequest` (separate `sender` and `recipient` associations), and `Friendship` reference `Player` without lifetime ownership, so removing a match or friendship never deletes a player account.
-- **Generalization (`--|>`) & Dependency (`..>`):** Repository interfaces extend `JpaRepository<T, ID>` via interface generalization; cross-process transport clients depend on server controllers over WebSockets and HTTP.
-
 ---
 
 ## 6. Process View
@@ -176,16 +148,16 @@ The class diagram follows OMG UML 2.5.1 notation with clearly marked architectur
 
 ## 7. Deployment View
 
-The deployment diagram uses UML 2.5.1 notation (`«device»`, `«executionEnvironment»`, `«artifact»`) to show how Compose Multiplatform clients connect to the Docker Compose backend hosting the Spring Boot server and PostgreSQL.
+Compose Multiplatform clients connect to a Docker Compose host running the Spring Boot server and PostgreSQL.
 
 ![UML deployment diagram](diagrams/deployment-diagram.svg)
 
 [Editable PlantUML](diagrams/deployment-diagram.puml)
 
-- **Player Device (`1..*`):** Runs the compiled `dom1no-client` artifact on the player's target OS (specific KMP targets remain open).
+- **Player Device (`1..*`):** Runs `dom1no-client` on the player's target OS (specific KMP targets remain open).
 - **Server Host (`1`):** Runs Docker Compose with two containers on an internal bridge network:
-  - **`app-server` container:** Runs `dom1no-server.jar` (Kotlin + Spring Boot). Local development uses plain HTTP/WS; public deployments enforce HTTPS and WSS via TLS termination (`NFR-SEC-05`).
-  - **`postgres-db` container:** Runs PostgreSQL 16 with a persistent volume (`dom1no_db`), accessible only to `app-server` over JDBC/TCP.
+  - **`app-server`:** Runs `dom1no-server.jar` (Kotlin + Spring Boot). Local development uses plain HTTP/WS; public deployments enforce HTTPS and WSS via TLS termination (`NFR-SEC-05`).
+  - **`postgres-db`:** Runs PostgreSQL 16 with a persistent volume (`dom1no_db`), accessible only to `app-server` over JDBC/TCP.
 
 No public server is deployed yet.
 
@@ -198,8 +170,6 @@ No public server is deployed yet.
 ---
 
 ## 9. Data View
-
-Because dom1no persists accounts, friendships, conversations, chat messages, rooms, and match outcomes, the Data View is included.
 
 ### 9.1 Enhanced Entity-Relationship (EER) Database Model
 

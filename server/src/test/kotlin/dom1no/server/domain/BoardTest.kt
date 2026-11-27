@@ -31,7 +31,7 @@ class BoardTest {
 
         assertEquals(6, board.openLeft)
         assertEquals(3, board.openRight)
-        assertEquals(listOf(Tile(6, 3)), board.placedTiles)
+        assertEquals(listOf(PlacedTile(6, 3)), board.placedTiles)
     }
 
     @Test
@@ -42,7 +42,8 @@ class BoardTest {
 
         assertEquals(5, board.openLeft)
         assertEquals(1, board.openRight)
-        assertEquals(listOf(Tile(5, 3), Tile(3, 1)), board.placedTiles)
+        assertEquals(listOf(PlacedTile(5, 3), PlacedTile(3, 1)), board.placedTiles)
+        assertEquals(Tile(3, 5), board.placedTiles.first().tile)
     }
 
     @Test
@@ -53,17 +54,62 @@ class BoardTest {
 
         assertEquals(3, board.openLeft)
         assertEquals(4, board.openRight)
-        assertEquals(listOf(Tile(3, 1), Tile(1, 4)), board.placedTiles)
+        assertEquals(listOf(PlacedTile(3, 1), PlacedTile(1, 4)), board.placedTiles)
     }
 
     @Test
-    fun `tile already oriented towards the end keeps its orientation`() {
+    fun `left placement has its matching pip touching the chain`() {
         val board = boardWithEnds(left = 3, right = 1)
 
         board.place(Tile(5, 3), BoardEnd.LEFT)
 
-        assertEquals(Tile(5, 3), board.placedTiles.first())
+        assertEquals(PlacedTile(5, 3), board.placedTiles.first())
         assertEquals(5, board.openLeft)
+    }
+
+    @Test
+    fun `right placement has its matching pip touching the chain`() {
+        val board = boardWithEnds(left = 3, right = 1)
+
+        board.place(Tile(1, 4), BoardEnd.RIGHT)
+
+        assertEquals(1, board.placedTiles.last().leftPip)
+        assertEquals(4, board.placedTiles.last().rightPip)
+    }
+
+    @Test
+    fun `a double can be placed on a matching end`() {
+        val board = boardWithEnds(left = 6, right = 1)
+
+        board.place(Tile(6, 6), BoardEnd.LEFT)
+
+        assertEquals(6, board.openLeft)
+        assertEquals(1, board.openRight)
+        assertEquals(2, board.placedTiles.size)
+    }
+
+    @Test
+    fun `a tile matching both ends can be placed on either selected end`() {
+        fun boardWithoutTheCandidateTile() = Board().apply {
+            place(Tile(3, 2), BoardEnd.LEFT)
+            place(Tile(2, 1), BoardEnd.RIGHT)
+        }
+        val leftBoard = boardWithoutTheCandidateTile()
+        val rightBoard = boardWithoutTheCandidateTile()
+
+        leftBoard.place(Tile(3, 1), BoardEnd.LEFT)
+        rightBoard.place(Tile(3, 1), BoardEnd.RIGHT)
+
+        assertEquals(1 to 1, leftBoard.openLeft to leftBoard.openRight)
+        assertEquals(3 to 3, rightBoard.openLeft to rightBoard.openRight)
+    }
+
+    @Test
+    fun `any tile can be placed on an empty board`() {
+        val board = Board()
+
+        assertTrue(board.canPlace(Tile(0, 0), BoardEnd.LEFT))
+        assertTrue(board.canPlace(Tile(3, 5), BoardEnd.RIGHT))
     }
 
     @Test
@@ -85,11 +131,12 @@ class BoardTest {
     @Test
     fun `rejected placement leaves board state unchanged`() {
         val board = boardWithEnds(left = 3, right = 1)
+        board.place(Tile(3, 5), BoardEnd.LEFT)
         val endsBefore = board.openLeft to board.openRight
         val tilesBefore = board.placedTiles
 
         assertThrows(IllegalPlacementException::class.java) {
-            board.place(Tile(6, 6), BoardEnd.LEFT)
+            board.place(Tile(6, 6), BoardEnd.RIGHT)
         }
 
         assertEquals(endsBefore, board.openLeft to board.openRight)

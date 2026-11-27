@@ -45,7 +45,11 @@ class TileTest {
     }
 
     @Test
-    fun `reversed tile swaps its pips`() {
-        assertEquals(Tile(5, 3), Tile(3, 5).reversed())
+    fun `tile identity is independent of orientation`() {
+        assertEquals(Tile(3, 5), Tile(5, 3))
+        assertEquals(Tile(3, 5).hashCode(), Tile(5, 3).hashCode())
+        assertEquals(1, setOf(Tile(3, 5), Tile(5, 3)).size)
+        assertEquals(3, Tile(5, 3).lowPip)
+        assertEquals(5, Tile(5, 3).highPip)
     }
 }

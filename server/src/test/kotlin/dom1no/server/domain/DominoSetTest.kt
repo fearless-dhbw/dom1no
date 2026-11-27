@@ -1,6 +1,7 @@
 package dom1no.server.domain
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class DominoSetTest {
@@ -19,10 +20,13 @@ class DominoSetTest {
 
         for (left in 0..6) {
             for (right in left..6) {
-                assert(tiles.contains(Tile(left, right))) {
-                    "Missing tile $left|$right"
-                }
+                assertTrue(tiles.contains(Tile(left, right)), "Missing tile $left|$right")
             }
         }
+    }
+
+    @Test
+    fun `tiles from the set are found by either pip order`() {
+        assertTrue(DominoSet.standardDoubleSix().contains(Tile(5, 3)))
     }
 }

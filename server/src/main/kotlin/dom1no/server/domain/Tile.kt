@@ -1,33 +1,33 @@
 package dom1no.server.domain
 
-/**
- * One domino tile as an ordered pair of pips.
- *
- * The order is meaningful only for a tile that has been placed on the board: it records which
- * pip touches the chain. Tiles in the standard set are created in canonical order, so equal
- * tiles compare equal there.
- */
-data class Tile(val leftPip: Int, val rightPip: Int) {
+/** The order-independent identity of one tile from the double-six set. */
+class Tile private constructor(val lowPip: Int, val highPip: Int) {
 
     init {
-        require(leftPip in MIN_PIP..MAX_PIP) { "Left pip $leftPip is outside $MIN_PIP..$MAX_PIP" }
-        require(rightPip in MIN_PIP..MAX_PIP) { "Right pip $rightPip is outside $MIN_PIP..$MAX_PIP" }
+        require(lowPip in MIN_PIP..MAX_PIP) { "Pip $lowPip is outside $MIN_PIP..$MAX_PIP" }
+        require(highPip in MIN_PIP..MAX_PIP) { "Pip $highPip is outside $MIN_PIP..$MAX_PIP" }
     }
 
     /** True when either pip equals [endValue], so the tile can touch an open end showing it. */
-    fun matches(endValue: Int): Boolean = leftPip == endValue || rightPip == endValue
+    fun matches(endValue: Int): Boolean = lowPip == endValue || highPip == endValue
 
-    fun pipSum(): Int = leftPip + rightPip
+    fun pipSum(): Int = lowPip + highPip
 
-    fun isDouble(): Boolean = leftPip == rightPip
+    fun isDouble(): Boolean = lowPip == highPip
 
-    /** The same tile with its pips swapped, used to orient it against an open end. */
-    fun reversed(): Tile = Tile(rightPip, leftPip)
+    override fun equals(other: Any?): Boolean =
+        this === other || other is Tile && lowPip == other.lowPip && highPip == other.highPip
 
-    override fun toString(): String = "$leftPip|$rightPip"
+    override fun hashCode(): Int = 31 * lowPip + highPip
+
+    override fun toString(): String = "$lowPip|$highPip"
 
     companion object {
         const val MIN_PIP = 0
         const val MAX_PIP = 6
+
+        /** Either pip order creates the same tile. Orientation belongs to [PlacedTile]. */
+        operator fun invoke(firstPip: Int, secondPip: Int): Tile =
+            Tile(minOf(firstPip, secondPip), maxOf(firstPip, secondPip))
     }
 }

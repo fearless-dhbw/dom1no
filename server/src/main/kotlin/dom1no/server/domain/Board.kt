@@ -6,6 +6,11 @@ enum class BoardEnd { LEFT, RIGHT }
 /** Raised when a placement does not match the chosen open end. The board is left unchanged. */
 class IllegalPlacementException(message: String) : IllegalArgumentException(message)
 
+/** The orientation of a tile in the board's left-to-right chain. */
+data class PlacedTile(val leftPip: Int, val rightPip: Int) {
+    val tile: Tile = Tile(leftPip, rightPip)
+}
+
 /**
  * The single chain of placed tiles, with an open pip value at each end.
  *
@@ -15,10 +20,10 @@ class IllegalPlacementException(message: String) : IllegalArgumentException(mess
  */
 class Board {
 
-    private val chain = mutableListOf<Tile>()
+    private val chain = mutableListOf<PlacedTile>()
 
     /** Oriented tiles from the left open end to the right open end. */
-    val placedTiles: List<Tile> get() = chain.toList()
+    val placedTiles: List<PlacedTile> get() = chain.toList()
 
     val openLeft: Int? get() = chain.firstOrNull()?.leftPip
 
@@ -29,7 +34,7 @@ class Board {
 
     fun place(tile: Tile, end: BoardEnd) {
         if (chain.isEmpty()) {
-            chain.add(tile)
+            chain.add(PlacedTile(tile.highPip, tile.lowPip))
             return
         }
 
@@ -49,9 +54,10 @@ class Board {
         BoardEnd.RIGHT -> openRight!!
     }
 
-    /** Rotates [tile] so its matching pip touches the chain and the other pip becomes the new end. */
-    private fun orientTowards(tile: Tile, openValue: Int, end: BoardEnd): Tile {
-        val touchingPip = if (end == BoardEnd.LEFT) tile.rightPip else tile.leftPip
-        return if (touchingPip == openValue) tile else tile.reversed()
+    /** Puts the matching pip next to the chain and exposes the other pip. */
+    private fun orientTowards(tile: Tile, openValue: Int, end: BoardEnd): PlacedTile {
+        val otherPip = if (tile.lowPip == openValue) tile.highPip else tile.lowPip
+        return if (end == BoardEnd.LEFT) PlacedTile(otherPip, openValue)
+        else PlacedTile(openValue, otherPip)
     }
 }

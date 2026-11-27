@@ -13,7 +13,10 @@ import dom1no.server.domain.Tile
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
-/** A participant's view: other hands and the boneyard's tile order are never included. */
+/**
+ * One participant's projection of a match. [hand] is the caller's own hand; [handCounts] is in
+ * seat order and contains sizes only, so opponents' tiles and the boneyard order stay private.
+ */
 data class MatchView(
     val matchId: String,
     val version: Long,

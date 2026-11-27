@@ -72,6 +72,75 @@ class Match private constructor(
         return MoveOutcome.Accepted
     }
 
+    /**
+     * Draws tiles for the active seat until a tile that can be placed is drawn or the boneyard is
+     * empty. The active seat keeps the turn either way, and drawing does not change the pass count.
+     *
+     * Drawing is rejected when the seat already has a legal placement or when no tiles remain.
+     */
+    fun drawUntilPlayable(seatIndex: Int): List<Tile> {
+        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+
+        if (status != MatchStatus.ACTIVE) {
+            throw MoveRejectedException(RejectionReason.MATCH_NOT_ACTIVE)
+        }
+        if (seatIndex != activeSeatIndex) {
+            throw MoveRejectedException(RejectionReason.NOT_YOUR_TURN)
+        }
+
+        val seat = seats[seatIndex]
+        if (canPlaceAnyTile(seat)) {
+            throw MoveRejectedException(RejectionReason.PLACEMENT_AVAILABLE)
+        }
+        if (remainingTiles.isEmpty()) {
+            throw MoveRejectedException(RejectionReason.NOTHING_TO_DRAW)
+        }
+
+        val drawn = mutableListOf<Tile>()
+        while (remainingTiles.isNotEmpty()) {
+            val tile = remainingTiles.removeAt(0)
+            seat.addTile(tile)
+            drawn.add(tile)
+            if (board.canPlace(tile, BoardEnd.LEFT) || board.canPlace(tile, BoardEnd.RIGHT)) break
+        }
+        return drawn
+    }
+
+    /**
+     * Records the active seat's pass. A pass is legal only when the seat has no placement and no
+     * tile remains to draw; it advances the turn unless every participant has now passed, which
+     * ends the match as blocked.
+     */
+    fun recordPass(seatIndex: Int): MoveOutcome {
+        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+
+        if (status != MatchStatus.ACTIVE) {
+            return MoveOutcome.Rejected(RejectionReason.MATCH_NOT_ACTIVE)
+        }
+        if (seatIndex != activeSeatIndex) {
+            return MoveOutcome.Rejected(RejectionReason.NOT_YOUR_TURN)
+        }
+
+        val seat = seats[seatIndex]
+        if (canPlaceAnyTile(seat)) {
+            return MoveOutcome.Rejected(RejectionReason.PLACEMENT_AVAILABLE)
+        }
+        if (remainingTiles.isNotEmpty()) {
+            return MoveOutcome.Rejected(RejectionReason.MUST_DRAW)
+        }
+
+        consecutivePasses += 1
+        if (consecutivePasses == seats.size) {
+            status = MatchStatus.FINISHED
+        } else {
+            activeSeatIndex = (activeSeatIndex + 1) % seats.size
+        }
+        return MoveOutcome.Accepted
+    }
+
+    private fun canPlaceAnyTile(seat: Seat): Boolean =
+        seat.hand.any { board.canPlace(it, BoardEnd.LEFT) || board.canPlace(it, BoardEnd.RIGHT) }
+
     companion object {
         private const val HAND_SIZE = 7
 

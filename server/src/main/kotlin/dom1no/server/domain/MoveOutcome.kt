@@ -11,4 +11,11 @@ enum class RejectionReason {
     NOT_YOUR_TURN,
     TILE_NOT_IN_HAND,
     ILLEGAL_PLACEMENT,
+    PLACEMENT_AVAILABLE,
+    NOTHING_TO_DRAW,
+    MUST_DRAW,
 }
+
+/** Raised by actions that return data rather than a [MoveOutcome] when the action is invalid. */
+class MoveRejectedException(val reason: RejectionReason) :
+    IllegalStateException("Move rejected: ${reason.name}")

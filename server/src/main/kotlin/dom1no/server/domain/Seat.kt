@@ -13,6 +13,10 @@ class Seat(
 
     fun hasTile(tile: Tile): Boolean = tiles.contains(tile)
 
+    fun addTile(tile: Tile) {
+        tiles.add(tile)
+    }
+
     fun removeTile(tile: Tile) {
         require(tiles.remove(tile)) { "Seat $seatNumber does not hold $tile" }
     }

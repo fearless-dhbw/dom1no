@@ -18,19 +18,59 @@ class Match private constructor(
     private val remainingTiles: MutableList<Tile>,
     val openingTile: Tile,
     val opener: Seat,
-    val activeSeatIndex: Int,
+    initialActiveSeatIndex: Int,
 ) {
+
+    var activeSeatIndex: Int = initialActiveSeatIndex
+        private set
 
     var status: MatchStatus = MatchStatus.ACTIVE
         private set
 
     var consecutivePasses: Int = 0
-        private set
+        internal set
 
     /** Undealt tiles in draw order. */
     val boneyard: List<Tile> get() = remainingTiles.toList()
 
     val activeSeat: Seat get() = seats[activeSeatIndex]
+
+    /**
+     * Applies the active seat's placement. Every rejection is checked before any state changes, so
+     * a rejected placement leaves the board, hands, turn and pass count untouched.
+     *
+     * An accepted placement that empties the hand finishes the match immediately and does not
+     * advance the turn. Winner and blocked-result reporting belong to the terminal-result step.
+     */
+    fun applyPlacement(seatIndex: Int, tile: Tile, end: BoardEnd): MoveOutcome {
+        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+
+        if (status != MatchStatus.ACTIVE) {
+            return MoveOutcome.Rejected(RejectionReason.MATCH_NOT_ACTIVE)
+        }
+        if (seatIndex != activeSeatIndex) {
+            return MoveOutcome.Rejected(RejectionReason.NOT_YOUR_TURN)
+        }
+
+        val seat = seats[seatIndex]
+        if (!seat.hasTile(tile)) {
+            return MoveOutcome.Rejected(RejectionReason.TILE_NOT_IN_HAND)
+        }
+        if (!board.canPlace(tile, end)) {
+            return MoveOutcome.Rejected(RejectionReason.ILLEGAL_PLACEMENT)
+        }
+
+        board.place(tile, end)
+        seat.removeTile(tile)
+        consecutivePasses = 0
+
+        if (seat.hand.isEmpty()) {
+            status = MatchStatus.FINISHED
+        } else {
+            activeSeatIndex = (activeSeatIndex + 1) % seats.size
+        }
+        return MoveOutcome.Accepted
+    }
 
     companion object {
         private const val HAND_SIZE = 7
@@ -60,7 +100,7 @@ class Match private constructor(
                 remainingTiles = deck.drop(configuration.seatCount * HAND_SIZE).toMutableList(),
                 openingTile = openingTile,
                 opener = opener,
-                activeSeatIndex = opener.seatNumber % configuration.seatCount,
+                initialActiveSeatIndex = opener.seatNumber % configuration.seatCount,
             )
         }
 

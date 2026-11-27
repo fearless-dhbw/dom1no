@@ -28,7 +28,7 @@ class Match private constructor(
         private set
 
     var consecutivePasses: Int = 0
-        internal set
+        private set
 
     /** Undealt tiles in draw order. */
     val boneyard: List<Tile> get() = remainingTiles.toList()
@@ -40,7 +40,7 @@ class Match private constructor(
      * a rejected placement leaves the board, hands, turn and pass count untouched.
      *
      * An accepted placement that empties the hand finishes the match immediately and does not
-     * advance the turn. Winner and blocked-result reporting belong to the terminal-result step.
+     * advance the turn; the result then names that seat or team as the winner.
      */
     fun applyPlacement(seatIndex: Int, tile: Tile, end: BoardEnd): MoveOutcome {
         require(seatIndex in seats.indices) { "No seat $seatIndex" }
@@ -140,6 +140,68 @@ class Match private constructor(
 
     private fun canPlaceAnyTile(seat: Seat): Boolean =
         seat.hand.any { board.canPlace(it, BoardEnd.LEFT) || board.canPlace(it, BoardEnd.RIGHT) }
+
+    /** The result of a finished match; null while the match is still active. */
+    val result: MatchResult?
+        get() = if (status == MatchStatus.FINISHED) evaluateOutcome() else null
+
+    /** Computes the explicit result and end reason of a finished match. */
+    fun evaluateOutcome(): MatchResult {
+        check(status == MatchStatus.FINISHED) { "Match is not finished" }
+
+        val emptyHandSeat = seats.firstOrNull { it.hand.isEmpty() }
+        return if (emptyHandSeat != null) emptyHandResult(emptyHandSeat) else blockedResult()
+    }
+
+    private fun emptyHandResult(emptySeat: Seat): MatchResult {
+        val winningTeam = if (configuration.isPartnership) emptySeat.teamNumber else null
+        val outcomes = seats.associate { seat ->
+            val wins = if (configuration.isPartnership) {
+                seat.teamNumber == winningTeam
+            } else {
+                seat.seatNumber == emptySeat.seatNumber
+            }
+            seat.seatNumber to if (wins) ParticipantOutcome.WIN else ParticipantOutcome.LOSS
+        }
+        return MatchResult(EndReason.EMPTY_HAND, outcomes)
+    }
+
+    private fun blockedResult(): MatchResult {
+        val pips = seats.associate { it.seatNumber to it.remainingPips() }
+        val outcomes = if (configuration.isPartnership) {
+            partnershipOutcomes(pips)
+        } else {
+            individualOutcomes(pips)
+        }
+        return MatchResult(EndReason.BLOCKED, outcomes, pips)
+    }
+
+    private fun individualOutcomes(pips: Map<Int, Int>): Map<Int, ParticipantOutcome> {
+        val lowest = pips.values.min()
+        val lowestSeats = pips.filterValues { it == lowest }.keys
+        return pips.mapValues { (seatNumber, _) ->
+            when {
+                seatNumber !in lowestSeats -> ParticipantOutcome.LOSS
+                lowestSeats.size == 1 -> ParticipantOutcome.WIN
+                else -> ParticipantOutcome.DRAW
+            }
+        }
+    }
+
+    private fun partnershipOutcomes(pips: Map<Int, Int>): Map<Int, ParticipantOutcome> {
+        val teamTotals = seats.groupBy { requireNotNull(it.teamNumber) }
+            .mapValues { (_, teamSeats) -> teamSeats.sumOf { pips.getValue(it.seatNumber) } }
+        val lowest = teamTotals.values.min()
+        val lowestTeams = teamTotals.filterValues { it == lowest }.keys
+        return seats.associate { seat ->
+            val team = requireNotNull(seat.teamNumber)
+            seat.seatNumber to when {
+                team !in lowestTeams -> ParticipantOutcome.LOSS
+                lowestTeams.size == 1 -> ParticipantOutcome.WIN
+                else -> ParticipantOutcome.DRAW
+            }
+        }
+    }
 
     companion object {
         private const val HAND_SIZE = 7

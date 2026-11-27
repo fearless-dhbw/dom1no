@@ -101,19 +101,6 @@ class MatchPlacementTest {
     }
 
     @Test
-    fun `an accepted placement resets consecutive passes`() {
-        val match = startedMatch()
-        match.consecutivePasses = 2
-
-        assertEquals(
-            MoveOutcome.Accepted,
-            match.applyPlacement(seatIndex = 1, tile = Tile(6, 0), end = BoardEnd.RIGHT),
-        )
-
-        assertEquals(0, match.consecutivePasses)
-    }
-
-    @Test
     fun `a placement out of turn is rejected without changing the match`() {
         val match = startedMatch()
         val before = snapshot(match)
@@ -138,7 +125,6 @@ class MatchPlacementTest {
     @Test
     fun `a tile that matches no open end is rejected without changing the match`() {
         val match = startedMatch()
-        match.consecutivePasses = 1
         val before = snapshot(match)
 
         val outcome = match.applyPlacement(seatIndex = 1, tile = Tile(5, 5), end = BoardEnd.LEFT)

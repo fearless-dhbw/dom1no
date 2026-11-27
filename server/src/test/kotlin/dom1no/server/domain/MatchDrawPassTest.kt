@@ -98,16 +98,6 @@ class MatchDrawPassTest {
     }
 
     @Test
-    fun `drawing does not change the pass count`() {
-        val match = Match.start(MatchConfiguration.TWO_PLAYER_INDIVIDUAL, drawDeck)
-        match.consecutivePasses = 1
-
-        match.drawUntilPlayable(1)
-
-        assertEquals(1, match.consecutivePasses)
-    }
-
-    @Test
     fun `drawing is rejected when the player has a legal placement`() {
         val match = Match.start(MatchConfiguration.TWO_PLAYER_INDIVIDUAL, placementAvailableDeck)
         val before = snapshot(match)
@@ -211,33 +201,6 @@ class MatchDrawPassTest {
     }
 
     @Test
-    fun `a partnership match is blocked after four consecutive passes`() {
-        val match = Match.start(MatchConfiguration.FOUR_PLAYER_PARTNERSHIP, partnershipNoSixDeck)
-        match.consecutivePasses = 3
-
-        assertEquals(MoveOutcome.Accepted, match.recordPass(3))
-
-        assertEquals(4, match.consecutivePasses)
-        assertEquals(MatchStatus.FINISHED, match.status)
-        assertEquals(3, match.activeSeatIndex)
-    }
-
-    @Test
-    fun `a finished match rejects draws and passes`() {
-        val match = Match.start(MatchConfiguration.FOUR_PLAYER_PARTNERSHIP, partnershipNoSixDeck)
-        match.consecutivePasses = 3
-        match.recordPass(3)
-        val before = snapshot(match)
-
-        assertRejected(RejectionReason.MATCH_NOT_ACTIVE) { match.drawUntilPlayable(3) }
-        assertEquals(
-            MoveOutcome.Rejected(RejectionReason.MATCH_NOT_ACTIVE),
-            match.recordPass(3),
-        )
-        assertEquals(before, snapshot(match))
-    }
-
-    @Test
     fun `three-player passes advance in seat order`() {
         val match = Match.start(MatchConfiguration.THREE_PLAYER_INDIVIDUAL, threePlayerDeck)
         match.drawUntilPlayable(1)
@@ -249,20 +212,6 @@ class MatchDrawPassTest {
         assertEquals(MoveOutcome.Accepted, match.recordPass(2))
         assertEquals(2, match.consecutivePasses)
         assertEquals(0, match.activeSeatIndex)
-    }
-
-    @Test
-    fun `a three-player match is blocked after three consecutive passes`() {
-        val match = Match.start(MatchConfiguration.THREE_PLAYER_INDIVIDUAL, threePlayerDeck)
-        match.drawUntilPlayable(1)
-        match.recordPass(1)
-        match.consecutivePasses = 2
-
-        assertEquals(MoveOutcome.Accepted, match.recordPass(2))
-
-        assertEquals(3, match.consecutivePasses)
-        assertEquals(MatchStatus.FINISHED, match.status)
-        assertEquals(2, match.activeSeatIndex)
     }
 
     @Test

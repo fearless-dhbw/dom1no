@@ -28,6 +28,7 @@ data class MatchView(
     val board: BoardSnapshot,
     val boneyardCount: Int,
     val activeSeatNumber: Int,
+    val consecutivePasses: Int,
     val status: MatchStatus,
     val result: MatchResult?,
 )
@@ -73,6 +74,7 @@ class MatchService {
                 board = match.board,
                 boneyardCount = match.boneyard.size,
                 activeSeatNumber = match.activeSeat.seatNumber,
+                consecutivePasses = match.consecutivePasses,
                 status = match.status,
                 result = match.result,
             )

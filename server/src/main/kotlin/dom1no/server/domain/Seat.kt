@@ -1,7 +1,18 @@
 package dom1no.server.domain
 
+/** A read-only view of one seat at a point in time. */
+data class SeatSnapshot(
+    val seatNumber: Int,
+    val teamNumber: Int?,
+    val hand: List<Tile>,
+) {
+    fun hasTile(tile: Tile): Boolean = hand.contains(tile)
+
+    fun remainingPips(): Int = hand.sumOf { it.pipSum() }
+}
+
 /** One participant's seat, its fixed team and the tiles currently in hand. */
-class Seat(
+internal class Seat(
     val seatNumber: Int,
     val teamNumber: Int?,
     hand: List<Tile>,
@@ -22,4 +33,6 @@ class Seat(
     }
 
     fun remainingPips(): Int = tiles.sumOf { it.pipSum() }
+
+    fun snapshot(): SeatSnapshot = SeatSnapshot(seatNumber, teamNumber, hand)
 }

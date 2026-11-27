@@ -22,7 +22,7 @@ class MatchSetupTest {
 
     /** Every seat is dealt seven tiles; the opener then plays one, leaving six. */
     private fun assertDealtThenOpened(match: Match) {
-        assertTrue(match.seats.all { it.hand.size == if (it === match.opener) 6 else 7 })
+        assertTrue(match.seats.all { it.hand.size == if (it.seatNumber == match.openerSeatNumber) 6 else 7 })
     }
 
     /** Seat 1 holds 4|4, seat 2 holds the higher 5|5, and 6|6 stays in the boneyard. */
@@ -106,7 +106,7 @@ class MatchSetupTest {
         val match = Match.start(MatchConfiguration.TWO_PLAYER_INDIVIDUAL, highestDoubleDeck)
 
         assertEquals(Tile(5, 5), match.openingTile)
-        assertEquals(2, match.opener.seatNumber)
+        assertEquals(2, match.openerSeatNumber)
     }
 
     @Test
@@ -129,7 +129,7 @@ class MatchSetupTest {
         val match = Match.start(MatchConfiguration.FOUR_PLAYER_PARTNERSHIP, partnershipDeck)
 
         assertEquals(Tile(6, 6), match.openingTile)
-        assertEquals(3, match.opener.seatNumber)
+        assertEquals(3, match.openerSeatNumber)
     }
 
     @Test
@@ -145,7 +145,7 @@ class MatchSetupTest {
     fun `the next seat becomes active after the opening placement`() {
         val match = Match.start(MatchConfiguration.TWO_PLAYER_INDIVIDUAL, doublesInBoneyardDeck)
 
-        assertEquals(1, match.opener.seatNumber)
+        assertEquals(1, match.openerSeatNumber)
         assertEquals(2, match.activeSeat.seatNumber)
     }
 
@@ -153,7 +153,7 @@ class MatchSetupTest {
     fun `the active seat wraps to seat one when the last seat opens`() {
         val match = Match.start(MatchConfiguration.TWO_PLAYER_INDIVIDUAL, highestDoubleDeck)
 
-        assertEquals(2, match.opener.seatNumber)
+        assertEquals(2, match.openerSeatNumber)
         assertEquals(1, match.activeSeat.seatNumber)
     }
 

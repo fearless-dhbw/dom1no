@@ -10,14 +10,17 @@ enum class MatchStatus { WAITING, ACTIVE, FINISHED }
  * Starting a match shuffles and deals seven tiles per seat, selects the opener under the game
  * rules, applies the opening placement and passes the turn to the next seat. The opener's
  * placement counts as their turn.
+ *
+ * Callers read the board and seats through immutable snapshots; the only way to change a match is
+ * through [applyPlacement], [drawUntilPlayable] and [recordPass].
  */
 class Match private constructor(
     val configuration: MatchConfiguration,
-    val seats: List<Seat>,
-    val board: Board,
+    private val boardState: Board,
+    private val seatStates: List<Seat>,
     private val remainingTiles: MutableList<Tile>,
     val openingTile: Tile,
-    val opener: Seat,
+    val openerSeatNumber: Int,
     initialActiveSeatIndex: Int,
 ) {
 
@@ -33,7 +36,14 @@ class Match private constructor(
     /** Undealt tiles in draw order. */
     val boneyard: List<Tile> get() = remainingTiles.toList()
 
-    val activeSeat: Seat get() = seats[activeSeatIndex]
+    /** Read-only snapshot of the board. */
+    val board: BoardSnapshot get() = boardState.snapshot()
+
+    /** Read-only snapshots of the seats in seat order. */
+    val seats: List<SeatSnapshot> get() = seatStates.map { it.snapshot() }
+
+    /** Read-only snapshot of the active seat. */
+    val activeSeat: SeatSnapshot get() = seatStates[activeSeatIndex].snapshot()
 
     /**
      * Applies the active seat's placement. Every rejection is checked before any state changes, so
@@ -43,7 +53,7 @@ class Match private constructor(
      * advance the turn; the result then names that seat or team as the winner.
      */
     fun applyPlacement(seatIndex: Int, tile: Tile, end: BoardEnd): MoveOutcome {
-        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+        require(seatIndex in seatStates.indices) { "No seat $seatIndex" }
 
         if (status != MatchStatus.ACTIVE) {
             return MoveOutcome.Rejected(RejectionReason.MATCH_NOT_ACTIVE)
@@ -52,22 +62,22 @@ class Match private constructor(
             return MoveOutcome.Rejected(RejectionReason.NOT_YOUR_TURN)
         }
 
-        val seat = seats[seatIndex]
+        val seat = seatStates[seatIndex]
         if (!seat.hasTile(tile)) {
             return MoveOutcome.Rejected(RejectionReason.TILE_NOT_IN_HAND)
         }
-        if (!board.canPlace(tile, end)) {
+        if (!boardState.canPlace(tile, end)) {
             return MoveOutcome.Rejected(RejectionReason.ILLEGAL_PLACEMENT)
         }
 
-        board.place(tile, end)
+        boardState.place(tile, end)
         seat.removeTile(tile)
         consecutivePasses = 0
 
         if (seat.hand.isEmpty()) {
             status = MatchStatus.FINISHED
         } else {
-            activeSeatIndex = (activeSeatIndex + 1) % seats.size
+            activeSeatIndex = (activeSeatIndex + 1) % seatStates.size
         }
         return MoveOutcome.Accepted
     }
@@ -79,7 +89,7 @@ class Match private constructor(
      * Drawing is rejected when the seat already has a legal placement or when no tiles remain.
      */
     fun drawUntilPlayable(seatIndex: Int): List<Tile> {
-        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+        require(seatIndex in seatStates.indices) { "No seat $seatIndex" }
 
         if (status != MatchStatus.ACTIVE) {
             throw MoveRejectedException(RejectionReason.MATCH_NOT_ACTIVE)
@@ -88,7 +98,7 @@ class Match private constructor(
             throw MoveRejectedException(RejectionReason.NOT_YOUR_TURN)
         }
 
-        val seat = seats[seatIndex]
+        val seat = seatStates[seatIndex]
         if (canPlaceAnyTile(seat)) {
             throw MoveRejectedException(RejectionReason.PLACEMENT_AVAILABLE)
         }
@@ -101,7 +111,7 @@ class Match private constructor(
             val tile = remainingTiles.removeAt(0)
             seat.addTile(tile)
             drawn.add(tile)
-            if (board.canPlace(tile, BoardEnd.LEFT) || board.canPlace(tile, BoardEnd.RIGHT)) break
+            if (boardState.canPlace(tile, BoardEnd.LEFT) || boardState.canPlace(tile, BoardEnd.RIGHT)) break
         }
         return drawn
     }
@@ -112,7 +122,7 @@ class Match private constructor(
      * ends the match as blocked.
      */
     fun recordPass(seatIndex: Int): MoveOutcome {
-        require(seatIndex in seats.indices) { "No seat $seatIndex" }
+        require(seatIndex in seatStates.indices) { "No seat $seatIndex" }
 
         if (status != MatchStatus.ACTIVE) {
             return MoveOutcome.Rejected(RejectionReason.MATCH_NOT_ACTIVE)
@@ -121,7 +131,7 @@ class Match private constructor(
             return MoveOutcome.Rejected(RejectionReason.NOT_YOUR_TURN)
         }
 
-        val seat = seats[seatIndex]
+        val seat = seatStates[seatIndex]
         if (canPlaceAnyTile(seat)) {
             return MoveOutcome.Rejected(RejectionReason.PLACEMENT_AVAILABLE)
         }
@@ -130,16 +140,16 @@ class Match private constructor(
         }
 
         consecutivePasses += 1
-        if (consecutivePasses == seats.size) {
+        if (consecutivePasses == seatStates.size) {
             status = MatchStatus.FINISHED
         } else {
-            activeSeatIndex = (activeSeatIndex + 1) % seats.size
+            activeSeatIndex = (activeSeatIndex + 1) % seatStates.size
         }
         return MoveOutcome.Accepted
     }
 
     private fun canPlaceAnyTile(seat: Seat): Boolean =
-        seat.hand.any { board.canPlace(it, BoardEnd.LEFT) || board.canPlace(it, BoardEnd.RIGHT) }
+        seat.hand.any { boardState.canPlace(it, BoardEnd.LEFT) || boardState.canPlace(it, BoardEnd.RIGHT) }
 
     /** The result of a finished match; null while the match is still active. */
     val result: MatchResult?
@@ -149,13 +159,13 @@ class Match private constructor(
     fun evaluateOutcome(): MatchResult {
         check(status == MatchStatus.FINISHED) { "Match is not finished" }
 
-        val emptyHandSeat = seats.firstOrNull { it.hand.isEmpty() }
+        val emptyHandSeat = seatStates.firstOrNull { it.hand.isEmpty() }
         return if (emptyHandSeat != null) emptyHandResult(emptyHandSeat) else blockedResult()
     }
 
     private fun emptyHandResult(emptySeat: Seat): MatchResult {
         val winningTeam = if (configuration.isPartnership) emptySeat.teamNumber else null
-        val outcomes = seats.associate { seat ->
+        val outcomes = seatStates.associate { seat ->
             val wins = if (configuration.isPartnership) {
                 seat.teamNumber == winningTeam
             } else {
@@ -167,7 +177,7 @@ class Match private constructor(
     }
 
     private fun blockedResult(): MatchResult {
-        val pips = seats.associate { it.seatNumber to it.remainingPips() }
+        val pips = seatStates.associate { it.seatNumber to it.remainingPips() }
         val outcomes = if (configuration.isPartnership) {
             partnershipOutcomes(pips)
         } else {
@@ -189,11 +199,11 @@ class Match private constructor(
     }
 
     private fun partnershipOutcomes(pips: Map<Int, Int>): Map<Int, ParticipantOutcome> {
-        val teamTotals = seats.groupBy { requireNotNull(it.teamNumber) }
+        val teamTotals = seatStates.groupBy { requireNotNull(it.teamNumber) }
             .mapValues { (_, teamSeats) -> teamSeats.sumOf { pips.getValue(it.seatNumber) } }
         val lowest = teamTotals.values.min()
         val lowestTeams = teamTotals.filterValues { it == lowest }.keys
-        return seats.associate { seat ->
+        return seatStates.associate { seat ->
             val team = requireNotNull(seat.teamNumber)
             seat.seatNumber to when {
                 team !in lowestTeams -> ParticipantOutcome.LOSS
@@ -226,11 +236,11 @@ class Match private constructor(
 
             return Match(
                 configuration = configuration,
-                seats = seats,
-                board = Board().apply { place(openingTile, BoardEnd.LEFT) },
+                boardState = Board().apply { place(openingTile, BoardEnd.LEFT) },
+                seatStates = seats,
                 remainingTiles = deck.drop(configuration.seatCount * HAND_SIZE).toMutableList(),
                 openingTile = openingTile,
-                opener = opener,
+                openerSeatNumber = opener.seatNumber,
                 initialActiveSeatIndex = opener.seatNumber % configuration.seatCount,
             )
         }

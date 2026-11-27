@@ -125,6 +125,38 @@ class MatchBlockedResultTest {
         x0
     """
 
+    /** Ends 5|5 with hands worth 46, 6 and 4 pips, so seat 3 wins alone. */
+    private val threePlayerWinnerDeck = deckOf(
+        "55 16 11 06 22 14 05 45 33 36 02 24 15 23 01 12 04 03 46 66 00 25 35 34 13 44 26 56",
+    )
+
+    private val threePlayerWinnerScript = """
+        p0 06 L
+        p1 36 R
+        p2 01 L
+        p0 14 L
+        p1 23 R
+        p2 04 L
+        p0 22 R
+        p1 02 L
+        p2 12 L
+        p0 16 L
+        p1 24 R
+        p2 46 L
+        d0 25,35,34
+        p0 34 L
+        p1 33 L
+        p2 03 L
+        p0 05 L
+        p1 45 L
+        d2 13,44
+        p2 44 L
+        d0 26,56
+        x0
+        x1
+        x2
+    """
+
     /** Ends 5|5 with team totals of 40 and 44 pips. */
     private val partnershipWinnerDeck = deckOf(
         "06 55 13 11 56 45 24 16 33 36 25 44 02 15 " +
@@ -227,6 +259,26 @@ class MatchBlockedResultTest {
             match.result?.outcomes,
         )
         assertTrue(match.result?.winners?.isEmpty() == true)
+    }
+
+    @Test
+    fun `a blocked three-player match has a unique lowest-pip winner`() {
+        val match = Match.start(MatchConfiguration.THREE_PLAYER_INDIVIDUAL, threePlayerWinnerDeck)
+
+        replay(match, threePlayerWinnerScript)
+
+        assertBlocked(match)
+        assertEquals(mapOf(1 to 46, 2 to 6, 3 to 4), match.result?.remainingPips)
+        assertEquals(
+            mapOf(
+                1 to ParticipantOutcome.LOSS,
+                2 to ParticipantOutcome.LOSS,
+                3 to ParticipantOutcome.WIN,
+            ),
+            match.result?.outcomes,
+        )
+        assertEquals(setOf(3), match.result?.winners)
+        assertFalse(match.result?.isDraw == true)
     }
 
     @Test

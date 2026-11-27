@@ -11,6 +11,12 @@ data class PlacedTile(val leftPip: Int, val rightPip: Int) {
     val tile: Tile = Tile(leftPip, rightPip)
 }
 
+/** A read-only view of the board at a point in time. */
+data class BoardSnapshot(val placedTiles: List<PlacedTile>) {
+    val openLeft: Int? get() = placedTiles.firstOrNull()?.leftPip
+    val openRight: Int? get() = placedTiles.lastOrNull()?.rightPip
+}
+
 /**
  * The single chain of placed tiles, with an open pip value at each end.
  *
@@ -18,7 +24,7 @@ data class PlacedTile(val leftPip: Int, val rightPip: Int) {
  * end and `placedTiles.last().rightPip` is the right open end. A rejected placement throws before
  * the chain is touched, which keeps the accepted board state intact.
  */
-class Board {
+internal class Board {
 
     private val chain = mutableListOf<PlacedTile>()
 
@@ -48,6 +54,8 @@ class Board {
         val oriented = orientTowards(tile, openValue, end)
         if (end == BoardEnd.LEFT) chain.add(0, oriented) else chain.add(oriented)
     }
+
+    fun snapshot(): BoardSnapshot = BoardSnapshot(placedTiles)
 
     private fun openValueAt(end: BoardEnd): Int = when (end) {
         BoardEnd.LEFT -> openLeft!!
